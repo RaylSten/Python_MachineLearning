@@ -1,0 +1,852 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{淺層機器學習:判別式分析與K-近鄰演算法之探討}}
+%\author{\small 陳柏維 \\ \small \it 國立臺北大學統計研究所}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{淺層機器學習:判別式分析與K-近鄰演算法之探討}
+本文將介紹線性判別式分析、二次判別式分析以及K-近鄰演算法，三種監督式學習之學習器，最後透過Python 對資料進行實作，分為兩個群組及三個群組的資料，觀察在不同資料特性下，哪一種學習器的誤判率較低。
+
+\section{判別式分析(Discriminant Analysis)}
+
+監督式學習常用在群組分析中，學習資料與其所屬群組間的關係。一但關係建立，便能預測(判別)新資料(未知群組)所屬的群組。「監督」之名來自利用已知資料的群組別來確立資料與群組間的關係。建立資料與其所屬群組間的關係可以從機率的觀點切入，像是後驗機率就是最直覺的出發點。
+
+\subsection{線性判別式分析(LDA)}
+
+假設 $X$ 代表多變量資料樣本變數，$G$ 代表群組的類別變數，則後驗機率寫為 $P(G\,|\,X)$，其解釋為，在出現資料 $X = x$ 的條件下，該資料屬於群組 $G = k$ 的機率。分別計算資料屬於不同群組的機率後，得到最大機率的群組便是該資料之所屬。於是這個群組判別寫成計算最大後驗機率問題，如式 (\ref{eq:lda_1}) ，也稱為判別式分析(Discriminant Analysis)。
+\begin{equation}\label{eq:lda_1}
+G(\mathbf{x}) = arg\mathop{max} \limits_k \log Pr(G = k\,|\,X = \mathbf{x})
+\end{equation}
+
+而要計算後驗機率 $P(G\,|\,X)$，必須透過貝氏定理
+
+\begin{equation}\label{eq:lda_2}
+\displaystyle P(G = k\,|\,X = \mathbf{x}) = \frac{P(X = \mathbf{x}\,|\,G = k)P(G = k)}{P(X = \mathbf{x})}
+\end{equation}
+
+其中 $P(X\,|\,G = k)$ 表示第 $k$ 組資料發生的機率密度函數，而 $P(G = k)$ 代表群組 $k$ 發生的機率。本章節在做數學推導時的假設如下:
+\tcbset{colback=blue!10!white}
+\begin{tcolorbox}[title = {模型假設}]
+\begin{enumerate}
+\item
+$P(X \,|\, G = k) = f_k(X)$ 服從多變量常態分配，$f_k(X) \sim \mathcal{MN}(\mu_k, \sum_k)$，其機率密度函數為
+\begin{equation}\label{eq:lda_3}
+f_k(X) = \frac{1}{(2\pi)^{p/2}|\sum_k|^{1/2}}e^{\frac{-1}{2}(X - \mu_{\mathbf{k}})^T \sum_k^{-1}(X - \mu_{\mathbf{k}})}
+\end{equation}
+其中資料變數 $X \in \mathbb{R}^p$，$\mu_k$ 與 $\sum_k$ 分別代表第 $k$ 群資料常態假設的均值與共變異矩陣(Covariance Matrix)。
+\item
+所有共變異數矩陣皆相同。 $\bigg(\sum_1 = \sum_2 = \cdots = \sum_k = \sum \bigg)$
+\end{enumerate}
+\end{tcolorbox}
+
+加入貝氏定理與資料的常態假設後，式 (\ref{eq:lda_1}) 的最大後驗機率問題改寫為
+\begin{eqnarray}
+G(x) 
+& = &
+arg\mathop{max} \limits_k \log Pr(G = k\,|\,X = \mathbf{x}) \nonumber \\
+& = & arg\mathop{max} \limits_k \log (Pr(X = \mathbf{x}\,|\,G = k)Pr(G = k)) \nonumber \\
+& = & arg\mathop{max} \limits_k \mathbf{x}^T \begin{matrix} \sum^{-1}\end{matrix} \mu_k - \frac{1}{2} \mu_k^T \begin{matrix} \sum^{-1} \end{matrix} \mu_k + \log Pr(G = k) 
+\end{eqnarray}
+
+第一行為一筆新資料 $X = x$ 來自哪一個群組的機率為最高，經過貝氏定理 (\ref{eq:lda_2}) 的轉換並去除與組別 $k$ 無關的分母，變成了第二行。再將式 (\ref{eq:lda_3}) 假設的常態函數代入(共變異矩陣相同)，同樣去除與組別 $k$ 無關的項目，變成了第三行，其中的目標函數又稱為線性判別式函數(Linear Discriminant Function)，即
+\begin{equation}\label{eq:lda_5}
+\delta_k(\mathbf{x}) = \mathbf{x}^T \begin{matrix} \sum^{-1}\end{matrix} \mu_k - \frac{1}{2} \mu_k^T \begin{matrix} \sum^{-1} \end{matrix} \mu_k + \log Pr(G = k) 
+\end{equation}
+
+在式 (\ref{eq:lda_5}) 中，除了資料 $\mathbf{x}$ 已知外，其餘都未知，即便如此，我們仍可以利用已知的資料來估計這些值，譬如 $\mu_k$ 用第 $k$ 組資料的樣本平均值，$\sum$ 可以用各組資料算出來的樣本共變異矩陣(Sample Covariance Matrices)的加權平均，$Pr(G = k)$則是已知資料中各組數量的比例，即
+\begin{itemize}
+\item
+$Pr(G = k) \approx \hat{\pi}_k = N_k/N$ ，其中 $N_k$ 代表第 $k$ 組的數量，$N$ 代表所有資料的總數。
+\item
+$\hat{\mu}_k = \sum_{group = k} \mathbf{x}_i/N_k$
+\item
+$\hat{\sum} = \sum_{k = 1}^K \sum_{group = k} (\mathbf{x}_i - \hat{\mu}_k)(\mathbf{x}_i - \hat{\mu}_k)^T/(N - K)$，$K$ 代表群組數。這個估計又稱為 Pooled within-group covariance matrix。
+\end{itemize}
+\subsubsection{群組分界線}
+
+監督式學習的群組分析，其幾何意義猶如在資料所在的 $\mathbb{R}^p$ 空間切割出 $K$ 個領域($K$ 是群組數)，切割的依據當然是給定的 $N$ 筆已知資料及其群組別。而判別新資料的群組別時，便只是看資料落在哪個區域而已。在概念的表達上，我們喜歡從二維資料去繪製平面或空間的群組分界線，再推至 $p$ 度空間的群組間的分界線。
+
+繪製分界線的做法必須先找出兩個群組的共同條件，譬如，群組 $k$ 與 $l$ 分界線滿足
+\begin{equation}\label{eq:lda_6}
+Pr(G = k\,|\,X = \mathbf{x}) = Pr(G = l\,|\,X = \mathbf{x}) 
+\end{equation}
+
+也就是在資料所在的空間裡，屬於群組 $k$ 與群組 $l$ 的機率相同的地方，或者說，切割群組 $k$ 與群組 $l$ 的線必須滿足以上的條件。在後驗機率相等的群組分界原則下，結合由貝式定理 (\ref{eq:lda_2}) 與資料的常態分配假設 (\ref{eq:lda_3})，分界線的函數可以從以下的轉換得到：
+\begin{eqnarray}
+\log \frac{Pr(G = k\,|\,X = \mathbf{x})}{Pr(G = l\,|\,X = \mathbf{x})} 
+& = &
+\log \frac{f_k(\mathbf{x})}{f_l(\mathbf{x})} + \log \frac{Pr(G = k)}{Pr(G = l)} \nonumber \\
+& = & 
+\log \frac{Pr(G = k)}{Pr(G = l)} - \frac{1}{2}(\mu_k + \mu_l)^T \begin{matrix} \sum^{-1} \end{matrix}(\mu_k - \mu_l) + \nonumber \\
+&  &
+\mathbf{x}^T \begin{matrix} \sum^{-1} \end{matrix}(\mu_k - \mu_l) = 0 \label{eq:lda_7}
+\end{eqnarray}
+這裡運用對數轉換(logit transformation)的技巧，並令 log-odds 為零去除指數，得到一組線性的方程式(請注意：線性關係來自「不同群組有相同共變異矩陣」的假設)。於是從資料的後驗機率相等，得到式 (\ref{eq:lda_7}) 的線性方程式，也決定群組的分野，當然也可供判斷一筆新資料的究竟落在哪個群組。在資料為二度空間的維度裡，這條線性的分界線可以被畫出來。
+\subsubsection{線性判別式分析訓練}
+
+下列將透過上述群組判別之規則進行訓練，其訓練之三組資料為 \verb|la_1.txt|, \verb|la_2.txt|, \verb|la_3.txt|。\footnote{資料來源 : https://ntpuccw.blog/python-in-learning/}
+
+\textbf{\large 訓練 1.}
+
+在不使用 Python 套件下，透過測試資料 \verb|la_1.txt| 進行訓練，\verb|la_1.txt| 是一組內含兩個已知群組的雙變量 $\mathbb{R}^2$ 資料，想看看式 (\ref{eq:lda_7}) LDA 的分群效果並試著畫出所示的 LDA 的分界線。
+
+首先估計出分界線函數 (\ref{eq:lda_7}) 所需的 $\mu_1,\, \mu_2,\, \sum,\, Pr(G = 1),\, Pr(G = 2)$ :
+\begin{itemize}
+\item
+估計之前，先檢視該資料的結構與內容，譬如群組的記號以 $0$ 與 $1$ 表達。
+\item
+當兩個群組的數量相等時，$\sum$ 的估計為 $\hat{\sum} = (\hat{\sum}_1 + \hat{\sum}_2)/2$，即兩群組之 pooled within group covariance matrix，定義為 $\sum = \frac{(n_1-1)\sum_1 + (n_2-1)\sum_2}{n_1 + n_2 -2}$。
+\end{itemize}
+
+參考程式碼如下 :
+\bigskip
+\begin{lstlisting}[language = Python]
+# Estimatr the group parameters
+n = D[:, 0].size
+n1, n2 = C1[:, 0].size, C2[:, 0].size
+pi1, pi2 = n1/n, n2/n # 先驗機率
+mu1, mu2 = np.mean(C1, axis = 0), np.mean(C2, axis = 0)
+Sigma = ((n1 - 1) * np.cov(C1.T) + \,
+	 (n2 - 1) * np.cov(C2.T))/(n1 + n2 - 2) # 共變異數矩陣
+\end{lstlisting}
+
+在只有兩個變數的情況下，將式 (\ref{eq:lda_7}) 中的 $\mathbf{x}^T$ 以 $[\,x_1\,\, x_2\,]$ 代入，改寫為 $K + [\,x1\,\, x2\,]L$，其中常數 $K$ 與 $2 \times 1$ 向量 $L$ 分別為
+\begin{eqnarray}
+K
+& = &
+\log \frac{Pr(G = 1)}{Pr(G = 2)} - \frac{1}{2}(\mu_k + \mu_l)^T \begin{matrix} \sum^{-1} \end{matrix}(\mu_k - \mu_l) \nonumber \\
+L
+& = & 
+\begin{matrix} \sum^{-1} \end{matrix}(\mu_k - \mu_l) \nonumber 
+\end{eqnarray}
+將直線方程式寫成
+\[K + L(1)x_1 + L(2)x_2 = 0\]
+
+當 $\mu_1,\, \mu_2,\, \sum,\, Pr(G = 1),\, Pr(G = 2)$ 以估計值帶入計算 $K$ 與 $L$ 時，便能畫出 LDA 的分界線，其程式碼如下:
+\bigskip
+\begin{lstlisting}[language = Python]
+K = np.log(pi1/pi2) - 0.5 * (mu1 + mu2).T @ LA.inv(Sigma) @ (mu1 - mu2)
+L = LA.inv(Sigma) @ (mu1 - mu2).T
+f = lambda x : -L[0]/L[1] * x - K/L[1]
+x = np.array([1, 5])
+plt.plot(x, f(x), c = 'purple', lw = 2)
+\end{lstlisting}
+
+圖 \ref{fig:lda_la_1} 為資料檔 \verb|la_1.txt| 透過分界線函數 (\ref{eq:lda_7})畫出群組分界線之成果圖，其訓練之準確率為 $94.00\%$。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir lda_la_1.eps}
+    \caption{線性判別式分析的群組分界線 : 資料檔 la\_1.txt}
+    \label{fig:lda_la_1}
+\end{figure}
+
+\textbf{\large 訓練 2.}
+
+透過 Python 的 \verb|sklearn| 套件當中的 \verb|sklearn.discrimant_analysis| 模組，其指令為 \verb|LinearDiscriminantAnalysis|，此訓練將透過資料檔 \verb|la_2.txt| 展示套件之使用方式、繪製分界線及計算訓練之準確率，如圖 \ref{fig:lda_la_2} 所示。
+
+首先載入 \verb|sklearn| 套件，透過 \verb|LinearDiscriminantAnalysis()| 建立線性判別式分析模型，接著利用 \verb|.fit()| 進行資料配適，最後再利用 \verb|.intercept_| 與 \verb|.coef_| 呈現參數估計之結果，程式碼如下:
+\bigskip
+\begin{lstlisting}[language = Python]
+from sklearn.discriminant_analysis \
+		import LinearDiscriminantAnalysis
+
+Lda = LinearDiscriminantAnalysis(tol = 1e-6)
+Lda.fit(X, y)
+K = Lda.intercept_
+L = Lda.coef_
+\end{lstlisting}
+
+透過資料配適之參數，畫出式 (\ref{eq:lda_7}) 之群組分界線，並計算訓練之準確率，程式碼如下:
+
+\begin{lstlisting}[language = Python]
+f = lambda x : -L[0][0]/L[0][1] * x - K/L[0][1]
+x = np.array([1.5, 4.5])
+plt.plot(x, f(x), c = 'purple', lw = 2)
+Acc = Lda.score(X, y)
+\end{lstlisting}
+
+圖 \ref{fig:lda_la_2} 為資料檔 \verb|la_2.txt| 透過分界線函數 (\ref{eq:lda_7})畫出群組分界線之成果圖，其訓練之準確率為 $91.00\%$。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir lda_la_2.eps}
+    \caption{線性判別式分析的群組分界線 : 資料檔 la\_2.txt}
+    \label{fig:lda_la_2}
+\end{figure}
+
+\textbf{\large 訓練 3.}
+
+此訓練將透過資料檔 \verb|la_3.txt| 展示在使用與不使用套件下繪製分界線及計算訓練之準確率之對比，如圖 \ref{fig:lda_la_3} 所示，其中圖 \ref{fig:lda_la_3} 左邊透過 \verb|sklearn| 套件呈現，圖 \ref{fig:lda_la_3} 右邊則為不使用套件之呈現，兩者透過分界線函數 (\ref{eq:lda_7})畫出群組分界線之成果圖，其訓練之準確率為 $73.00\%$。
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.483]{\imgdir lda_la_3_1.eps}
+\includegraphics[scale = 0.483]{\imgdir lda_la_3_2.eps}
+\caption{線性判別式分析的群組分界線 : 資料檔 la\_3.txt} 
+\label{fig:lda_la_3}
+\end{figure}
+\subsection{二次判別式分析(QDA)}
+線性判別分析(LDA)群組間的線性分界線來自群組的共變異矩陣相同的假設。如果拿掉這個假設，令各群組的共變異矩陣不同時，則如式 (\ref{eq:lda_5}) 的線性判別式函數將改寫為：
+\begin{equation}\label{eq:qda_1}
+\delta_k(\mathbf{x}) = -\frac{1}{2} \log|\begin{matrix} \sum_k \end{matrix}| - \frac{1}{2}(\mathbf{x} - \mu_k)^T \begin{matrix} \sum_k^{-1} \end{matrix}(\mathbf{x} - \mu_k) + \log Pr(G = k)
+\end{equation}
+
+式 (\ref{eq:qda_1}) 稱為二次判別式函數。稱為二次(Quadratic)的原因來自而介於群組 $k$ 與群組 $l$ 間的分界線不是直線，而是變數的二次方，這條分界線寫為：
+\begin{equation}\label{eq:qda_2}
+\{\mathbf{x}\,|\,\delta_{\mathbf{k}}(\mathbf{x}) = \delta_{\mathbf{l}}(\mathbf{x})\}
+\end{equation}
+
+若令 $x = [\,X_1\,\, X_2\,]$，則式 (\ref{eq:qda_2}) 經過展開，推導為
+\begin{equation}\label{eq:qda_3}
+c = c_1 X_1 + c_2 X_2 + c_3 X_1 X_2 + c_4 X_1^2 + c_5 X_2^2
+\end{equation}
+
+式 (\ref{eq:qda_3}) 便是一條 $(X_1, X_2)$ 平面上的二次曲線。
+
+接著利用群組的後驗機率為一多變量函數 (式(\ref{eq:lda_2}))，將函數值對應到不同顏色，並在函數值之間產生漸層效應，畫出如圖 \ref{fig:qda_la_1} 具群組分辨的色彩分佈圖。在 matplotlib.pyplot 套件裡，稱為 pseudo color，指令為 \verb|pcolormesh|。畫出圖 \ref{fig:qda_la_1} 的程式碼如下：
+\bigskip
+\begin{lstlisting}[language = Python]
+from matplotlib import colors
+from sklearn.discriminant_analysis \
+			import QuadraticDiscriminantAnalysis
+		
+area = 2 * np.random.randint(50, size = D[:, 0].size)
+grp_color = [[0, 1, 0] if i == 0 else [0, 0, 1] for i in y]
+plt.scatter(D[:, 0], D[:, 1], c = grp_color, \
+		s = area, marker = 'o')
+Qda = QuadraticDiscriminantAnalysis( \
+		tol = 1e-6, store_covariance = True)
+Qda.fit(X, y)
+nx, ny = 100, 100
+x_min, x_max = plt.xlim()
+y_min, y_max = plt.ylim()
+x_ = np.linspace(x_min, x_max, nx)
+y_ = np.linspace(y_min, y_max, ny)
+xx, yy = np.meshgrid(x_, y_)
+Z = Qda.predict_proba(np.c_[xx.ravel(), yy.ravel()])
+Z = Z[:, 1].reshape(xx.shape)
+cdit = {'red': [(0, 0.7, 0.7), (1, 0.7, 0.7)], \
+    	'green': [(0, 1, 1), (1, 0.7, 0.7)], \
+    	'blue': [(0, 0.7, 0.7), (1, 1, 1)]}
+cmap = colors.LinearSegmentedColormap( \
+	'green_blue_classes', cdit)
+plt.cm.register_cmap(cmap = cmap)
+plt.pcolormesh(xx, yy, Z, cmap = 'green_blue_classes', \
+	norm = colors.Normalize(0., 1.), \ 
+	shading = 'auto', zorder = 0)
+contoursQDA = plt.contour(xx, yy, Z, [0.5], colors = 'k')
+\end{lstlisting}
+
+\textbf{\large 訓練 1.}
+
+此訓練將透過資料檔 \verb|la_1.txt| 繪製分界線及計算訓練之準確率，如圖 \ref{fig:qda_la_1} 所示，而與圖 \ref{fig:lda_la_1} 對比可看出線性判別式分析模型的分界線似乎能將資料切割得較好，而其準確率為 94\% 也比二次判別式分析模型的準確率 93.5\% 高。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir qda_la_1.eps}
+    \caption{二次判別式分析的群組分界線 : 資料檔 la\_1.txt}
+    \label{fig:qda_la_1}
+\end{figure}
+
+\textbf{\large 訓練 2.}
+
+此訓練將透過資料檔 \verb|la_2.txt| 繪製分界線及計算訓練之準確率，如圖 \ref{fig:qda_la_2} 所示，而與圖 \ref{fig:lda_la_2} 對比可看出二次判別式分析模型的分界線似乎能將資料切割得較好，而其準確率為 93.5\% 也比線性判別式分析模型的準確率 91\% 高。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.63]{\imgdir qda_la_2.eps}
+    \caption{二次判別式分析的群組分界線 : 資料檔 la\_2.txt}
+    \label{fig:qda_la_2}
+\end{figure}
+
+\textbf{\large 訓練 3.}
+
+此訓練將透過資料檔 \verb|la_3.txt| 繪製分界線及計算訓練之準確率，如圖 \ref{fig:qda_la_3} 所示，而與圖 \ref{fig:lda_la_3} 對比可看出線性判別式分析模型的分界線似乎能將資料切割得較好，而其準確率為 73\% 也比二次判別式分析模型的準確率 71.5\% 高。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.63]{\imgdir qda_la_3.eps}
+    \caption{二次判別式分析的群組分界線 : 資料檔 la\_3.txt}
+    \label{fig:qda_la_3}
+\end{figure}
+\section{K-近鄰演算法(KNN)}
+\subsection{背景介紹}
+我們希望資料的來源或資料的本身可以提供更多的訊息，做為新資料所屬群組的判別依據。這樣的想法
+把問題帶進「機率」的範疇來解決。
+
+假設 $Y$ 及 $f(X)$ 分別代表輸出變數與輸出預測值，其中 $X \in \mathbb{R}^p$ 表示有 $p$ 個輸入變數。我們期望輸出值與預測值的誤差愈小愈好，如果輸入變數 $X$ 與輸出變數 $Y$ 的聯合機率密度函數 $Pr(X, Y)$ 已知的話，這個問題可以寫成：
+\begin{equation}\label{eq:knn_1}
+\mathop{\text{min}} \limits_{f(X)} E_{XY}\,[(Y - f(X))^2]
+\end{equation}
+
+也就是找一個輸入與輸出變數間的關係式 $f(·)$ ，使得真正的輸出值 $Y$ 與其預測值 $f(X)$ 間的誤差的平方期望值越小越好。有別於不論機率特性的「最小平方法(Least Squared Errors, LSE)」，這個方法稱為「最小均方誤差(Minimum Mean Squared Error, MMSE)」。在已知樣本值 $X = \mathbf{x}$ 的條件下，它的最佳解如(未知函數 $f(X)$ 的最佳選擇)
+\begin{equation}\label{eq:knn_2}
+y = \hat{f}(\mathbf{x}) = E_{Y|X}\,(Y\,|\,X = \mathbf{x})
+\end{equation}
+
+其中 $X, Y$ 代表輸入輸出變數，$\mathbf{x}$ 與 $y$ 表示輸入值及輸出的預測值(或稱擬合值)。式 (\ref{eq:knn_2}) 說明當輸入值為 $\mathbf{x}$ 時，最佳的輸出預測值為輸出變數的「條件式均值(Conditional Mean)」。
+
+接下來的問題是如何計算 $y = E_{Y|X}\,(Y\,|\,X = \mathbf{x})$ ? 期望值代表的是理論值，至於要如何落實到實際的應用呢 ? 或說若不知道機率密度函數 $Pr(Y\,|\,X)$，如何得到這個期望值呢 ? 實務的作法，一般都是利用平均數來估計這個期望值。譬如式 (\ref{eq:knn_3}) 是個不錯的估計式
+\begin{equation}\label{eq:knn_3}
+\hat{y} = Ave\,(y_i\,|\,X = \mathbf{x})
+\end{equation}
+
+其中 $Ave(·)$ 代表求平均值。這個估計式解讀為「將輸入資料為 $\mathbf{x}$ 的所有資料，找出對應的所有輸出值 $y_i$ 取平均」。雖然樣本平均數是期望值的不偏估計，不過這個做法面臨實際的困難是已知的多變量連續型資料中，剛好等於 $\mathbf{x}$ 的機率等於 0，估計式 (\ref{eq:knn_3}) 在實務上不可行。
+
+將式 (\ref{eq:knn_3}) 稍作修改後，下面這個輸出預測值的估計式舒緩了這些困擾。
+\begin{equation}\label{eq:knn_4}
+\hat{y} = Ave\,(y_i\,|\,\mathbf{x}_i \in N_K(\mathbf{x})) = \frac{1}{K} \sum_{\mathbf{x}_i \in N_k(\mathbf{x})} y_i
+\end{equation}
+式 (\ref{eq:knn_4}) 解讀為：從已知的資料中找到 $K$ 個最靠近 $\mathbf{x}$ 的資料(這是 $N_K(\mathbf{x})$ 的意義)，將這些鄰近的 $K$ 筆資料所對應的 $y$ 值平均起來作為「條件式均值」的估計，這個方法叫做 K Nearest-Neighbor method。目前為止所提到的輸出變數並不侷限任何型態，但若輸出變數 $Y$ 的群組屬性屬類別資料時，如式 (\ref{eq:knn_1}) 的 MMSE 問題可以寫成
+\begin{equation}\label{eq:knn_5}
+\mathop{\text{min}} \limits_{g(X)} E_{XG}\,[L(G, g(X))]
+\end{equation}
+由於是類別資料的關係，其輸出群組變數改寫為 $G$，預測群組寫成 $g(X)$，兩者的誤差以「Loss function」$L(G, g(X))$ 取代原先的平方差。當 $L(G, g(X))$ 定義為
+\[L(G, g(X) = \begin{cases} 
+0  & \mbox{if} \,\,G = g(X)\\ 
+1  & \mbox{if} \,\,G \neq g(X) 
+\end{cases}\]
+式 (\ref{eq:knn_5}) 的最佳解為
+\begin{equation}\label{eq:knn_6}
+\hat{g}(X) = g_k \,\,\text{if}\,\,Pr(g_k\,|\,X = \mathbf{x}) = \mathop{\text{max}} \limits_{g \in G} Pr(g\,|\,X = \mathbf{x}) 
+\end{equation}
+其中 $g_k$ 代表第 $k$ 個群組(group)，$G$ 是所有群組的集合。這個結果說明：當輸入值為 $\mathbf{x}$ 時，其所屬群組的 MMSE 預測為
+
+\begin{center}
+\fcolorbox{black}{lightmauve}{「在所有的群組中，群組機率密度函數在 $\mathbf{x}$ 處的值為最大者」}
+\end{center}
+
+又稱為貝式分類器 Bayes classifier。不管哪一種輸出的型態，這裡都使用到「後驗機率」(Posterior Probability)的觀念，也就是當給定輸入變數 $X = \mathbf{x}$，$Y$(或 $G$) 值的可能性(機率)。
+
+\tcbset{colback=blue!10!white}
+\begin{tcolorbox}[title = {群組判別}]
+從式 (\ref{eq:knn_6}) 中似乎看不出一個明顯的「分界線」方程式，無法像迴歸模型或判別式分析那樣根據方程式畫出一條分界線，更何況機率密度函數 $Pr(G\,|\,X = \mathbf{x})$ 也是未知。不過如迴歸模型應用在類別資料上，當假設兩個群組的輸出為 0 (群組 $g_1$) 與 1 (群組 $g_2$) 時，式 (\ref{eq:knn_4}) 可以當作式 (\ref{eq:knn_6}) 的估計式，並配合下列的群組判別式
+\begin{equation}\label{eq:knn_7}
+\mathbf{x} \in \begin{cases} 
+g_1  & \mbox{if} \,\,\hat{y} \leq 0.5\\ 
+g_2  & \mbox{if} \,\,\hat{y} > 0.5
+\end{cases}
+\end{equation}
+式 (\ref{eq:knn_4}) 的 $\hat{y} \leq 0.5$ 相當於式 (\ref{eq:knn_6}) 的 $Pr(g_1\,|\,X = \mathbf{x}) > Pr(g_2\,|\,X = \mathbf{x})$。
+\end{tcolorbox}
+
+\subsection{K-近鄰演算法之訓練}
+由於 K Nearest-Neighbor method 並沒有定義出一個分界線的方程式，無法在所在的空間明確地畫出群組界線，不過可以如圖 1 的作法，在一定範圍的空間內，將空間等份成格子狀 (grids)，每個格子的座標代表一個資料值 $\mathbf{x}$，將每一個座標點當作新資料一樣的拿出來判斷其類別，依式 (\ref{eq:knn_4}) 與 (\ref{eq:knn_7})，為每個座標點依其群組判斷劃上不同的符號或顏色。
+
+式 (\ref{eq:knn_4}) 的估計式中需要找出「最靠近 $\mathbf{x}$ 的 $K$ 個已知資料」，這個「靠近」的測量方式可以採用歐式距離(Euclidean Distance)。假設 $x_1, x_2, \cdots, x_N$ 為 $N$ 個已知資料(含群組別)，$\mathbf{x}$ 為空間中某個待判別群組的資料，程式中需要計算 $\mathbf{x}$ 與所有已知資料的距離，再從中選取最靠近的 $K$ 筆資料，最後再將這 $K$ 筆資料的群組值(0 或 1)平均起來，即為式 (\ref{eq:knn_7}) 中的 $\hat{y}$ 值，其程式碼如下 :
+\bigskip
+\begin{lstlisting}[language = Python]
+# scatter plot by seabormn
+cmap_bold = ['darkgreen', 'darkblue']
+Group_name = np.array(['Group A', 'Group B'])
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x = X[:, 0], y = X[:, 1], \
+    hue = Group_name[y], palette = cmap_bold, \
+        alpha = 0.9, edgecolor = 'black')
+# KNN learning
+K = 5
+weights = 'uniform'
+Knn = neighbors.KNeighborsClassifier(K, weights = weights)
+Knn.fit(X, y)
+trainingErr = 1 - Knn.score(X, y)
+x_min, x_max = X[:,0].min() - 1, X[:,0].max() + 1
+y_min, y_max = X[:,1].min() - 1, X[:,1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),\
+	np.arange(y_min, y_max, 0.1))
+z = Knn.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = z.reshape(xx.shape)
+cmap_light = ListedColormap(['green', 'cornflowerblue'])
+plt.contourf(xx, yy, Z, cmap = cmap_light, alpha = 0.3)
+\end{lstlisting}
+\bigskip
+\textbf{\large 訓練 1.}
+
+此訓練將透過資料檔 \verb|la_1.txt| 繪製分界線及計算訓練之誤判率，如圖 \ref{fig:knn_la_1} 所示，圖 \ref{fig:knn_la_1} 左邊為設定 $K = 5$ 時畫出之分界線，右邊為設定 $K = 15$ 時畫出之分界線，可以發現左邊能將資料切割得較好，而其誤判率為 0.05 也比右邊誤判率 0.06 低。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_la_1_1.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_la_1_2.jpg}
+\caption{K-近鄰演算法的群組分界線 : 資料檔 la\_1.txt} 
+\label{fig:knn_la_1}
+\end{figure}
+
+\textbf{\large 訓練 2.}
+
+此訓練將透過資料檔 \verb|la_2.txt| 繪製分界線及計算訓練之誤判率，如圖 \ref{fig:knn_la_2} 所示，圖 \ref{fig:knn_la_2} 左邊為設定 $K = 5$ 時畫出之分界線，右邊為設定 $K = 15$ 時畫出之分界線，可以發現雖然分界線有些許不同，但其誤判率皆為 0.06。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_la_2_1.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_la_2_2.jpg}
+\caption{K-近鄰演算法的群組分界線 : 資料檔 la\_2.txt} 
+\label{fig:knn_la_2}
+\end{figure}
+
+\textbf{\large 訓練 3.}
+
+此訓練將透過資料檔 \verb|la_3.txt| 繪製分界線及計算訓練之誤判率，如圖 \ref{fig:knn_la_3} 所示，圖 \ref{fig:knn_la_3} 左邊為設定 $K = 5$ 時畫出之分界線，右邊為設定 $K = 15$ 時畫出之分界線，可以發現左邊能將資料切割得較好，而其誤判率為 0.13 也比右邊誤判率 0.155 低。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_la_3_1.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_la_3_2.jpg}
+\caption{K-近鄰演算法的群組分界線 : 資料檔 la\_3.txt} 
+\label{fig:knn_la_3}
+\end{figure}
+
+由上面三個訓練可發現，當 $K$ 越小時，訓練的誤判率越低。
+\section{學習器之評比}
+在機器學習的領域，將不同的學習方法(模型)通稱為學習器，而學習器的選擇、訓練與評比是機器學習的重要步驟。下列將透過模擬雙變量常態母體的資料，探討學習器面對不同的資料時的表現。
+\subsection{選用兩群不同的資料展現三種學習器的學習情況}
+
+\textbf{\large 模擬訓練 1.(資料中心位置較遠、分散程度小且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_1} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_1} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_1} 和圖 \ref{fig:knn_test_1} 可看出，在資料中心位置較遠、分散程度小且共變異矩陣相同的情況下，三種學習器將資料切割的情形都不錯，而線性判別式分析的訓練誤差為最低，這可能也跟線性判別式分析的模型假設有關。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_1.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 1}
+    \label{fig:da_test_1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_11.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_12.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 1} 
+\label{fig:knn_test_1}
+\end{figure}
+
+\textbf{\large 模擬訓練 2.(資料中心位置較遠、分散程度大且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_2} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_2} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_2} 和圖 \ref{fig:knn_test_2} 可看出，在資料中心位置較遠、分散程度大且共變異矩陣不相同的情況下，三種學習器將資料切割的情形都不錯，而 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_2.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 2}
+    \label{fig:da_test_2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_21.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_22.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 2} 
+\label{fig:knn_test_2}
+\end{figure}
+
+\textbf{\large 模擬訓練 3.(資料中心位置較近、分散程度小且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_3} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_3} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_3} 和圖 \ref{fig:knn_test_3} 可看出，在資料中心位置較近、分散程度小且共變異矩陣相同的情況下，三種學習器將資料切割的情形都不是很好，而 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_3.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 3}
+    \label{fig:da_test_3}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_31.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_32.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 3} 
+\label{fig:knn_test_3}
+\end{figure}
+
+\textbf{\large 模擬訓練 4.(資料中心位置較近、分散程度大且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_4} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_4} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_4} 和圖 \ref{fig:knn_test_4} 可看出，在資料中心位置較近、分散程度大且共變異矩陣不相同的情況下，三種學習器將資料切割的情形都不是很好，而 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_4.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 4}
+    \label{fig:da_test_4}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_41.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_42.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 4} 
+\label{fig:knn_test_4}
+\end{figure}
+
+\textbf{\large 模擬訓練 5.(資料分散程度小、$X_1, X_2$ 具相關性且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_5} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_5} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_5} 和圖 \ref{fig:knn_test_5} 可看出，在資料分散程度小、$X_1, X_2$ 具有相關性且共變異矩陣相同的情況下，三種學習器將資料切割的情形都不是很好，而 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_5.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 5}
+    \label{fig:da_test_5}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_51.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_52.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 5} 
+\label{fig:knn_test_5}
+\end{figure}
+
+\textbf{\large 模擬訓練 6.(資料分散程度大、$X_1, X_2$ 具相關性且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0.5\\
+0.5 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+圖 \ref{fig:da_test_6} 為利用 LDA 和 QDA 所繪製出之分界線，圖 \ref{fig:knn_test_6} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:da_test_6} 和圖 \ref{fig:knn_test_6} 可看出，在資料分散程度大、$X_1, X_2$ 具有相關性且共變異矩陣不相同的情況下，三種學習器將資料切割的情形都不是很好，而 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir da_test_6.eps}
+    \caption{判別式分析的群組分界線: 模擬訓練 6}
+    \label{fig:da_test_6}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_61.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_62.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 6} 
+\label{fig:knn_test_6}
+\end{figure}
+
+\subsection{兩群不同資料在三種學習器訓練誤差與測試誤差之對比}
+將上述六組資料分別分割成訓練樣本及測試樣本，其中訓練集與測試集的比例為 8 : 2，用以計算訓練誤差與測試誤差，接著採用 bootstrapping 的方式，重複抽樣 100 次，最後取平均做為比較的基準，其中表 \ref{tb:error_1} 為三種學習器訓練誤差之對比，表 \ref{tb:error_2} 為三種學習器測試誤差之對比。由表 \ref{tb:error_1} 可知，三種學習器在資料較為接近的情況下，訓練誤差皆會高於資料相距較遠的情況，而除了當資料中心位置遠、分散程度小且共變異矩陣相同的情況下 LDA 的訓練誤差最低之外，其餘的情況皆由 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。而由表 \ref{tb:error_2} 可知，三種學習器在資料共變異矩陣相同的情況下皆由 LDA 的測試誤差最低，而在資料共變異矩陣不同的情況下皆由 QDA 的測試誤差最低，這個結果算是蠻合理的，畢竟 LDA 的模型假設其中一個為共變異矩陣相同。
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{學習器訓練誤差之對比}\label{tb:error_1}
+\tabcolsep=12pt
+\begin{tabular}{ccccc} 
+\toprule
+& \multicolumn{4}{c}{學習器}\\
+\cmidrule(l){2-5}
+資料型態 & LDA & QDA & 5-NN & 15-NN\\[3pt]
+\midrule
+中心位置遠、分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0186 & 0.0188  & 0.0191 & 0.0199 \\[3pt]
+中心位置遠、分散程度大且共變異矩陣不同 & 0.1027 & 0.0734 & \cellcolor{red!25}0.0709 & 0.0831 \\[3pt]
+中心位置近、分散程度小且共變異矩陣相同 & 0.2781 & 0.2755 & \cellcolor{red!25}0.2212 & 0.2409 \\[3pt]
+中心位置近、分散程度大且共變異矩陣不同 & 0.2658 & 0.1718 & \cellcolor{red!25}0.1432 & 0.1755 \\ [3pt]
+分散程度小、具相關性且共變異矩陣相同 & 0.2387 &  0.2463 & \cellcolor{red!25}0.2143 & 0.2426 \\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.3444 &  0.1892 & \cellcolor{red!25}0.1686 & 0.1801 \\ 
+\bottomrule
+\end{tabular}
+\end{table}\bigskip
+\begin{table}[H] 
+\centering
+\caption{學習器測試誤差之對比}\label{tb:error_2}
+\tabcolsep=12pt
+\begin{tabular}{ccccc} 
+\toprule
+& \multicolumn{4}{c}{學習器}\\
+\cmidrule(l){2-5}
+資料型態 & LDA & QDA & 5-NN & 15-NN\\[3pt]
+\midrule
+中心位置遠、分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0216 & 0.0222 & 0.0241 & 0.0219  \\[3pt]
+中心位置遠、分散程度大且共變異矩陣不同 & 0.1051 & \cellcolor{red!25}0.0745 & 0.0878 & 0.0906 \\[3pt]
+中心位置近、分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.2794 & 0.2844 & 0.3175 & 0.2806 \\[3pt]
+中心位置近、分散程度大且共變異矩陣不同 & 0.2796 & \cellcolor{red!25}0.1829 & 0.2184 & 0.1951 \\ [3pt]
+分散程度小、具相關性且共變異矩陣相同 & \cellcolor{red!25}0.2449 & 0.2521 & 0.2971 & 0.2783 \\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.3652 & \cellcolor{red!25}0.2021 & 0.2334 & 0.2086 \\ 
+\bottomrule
+\end{tabular}
+\end{table} 
+\subsection{選用三群不同的資料展現三種學習器的學習情況}
+\textbf{\large 模擬訓練 1.(資料分散程度小且共變異矩陣相同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+圖 \ref{fig:knn_test_7} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:knn_test_7} 可看出，在資料分散程度小且共變異矩陣相同的情況下，$K = 15$ 的 K-近鄰演算法的訓練誤差低於$K = 5$ 的 K-近鄰演算法的訓練誤差。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_71.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_72.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 1} 
+\label{fig:knn_test_7}
+\end{figure}
+
+\textbf{\large 模擬訓練 2.(資料分散程度大且共變異矩陣不同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+3 & 0\\
+0 & 3
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+圖 \ref{fig:knn_test_8} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:knn_test_8} 可看出，在資料分散程度小且共變異矩陣相同的情況下，$K = 5$ 的 K-近鄰演算法的訓練誤差低於$K = 15$ 的 K-近鄰演算法的訓練誤差。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_81.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_82.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 2} 
+\label{fig:knn_test_8}
+\end{figure}
+
+\textbf{\large 模擬訓練 3.(資料分散程度小、$X_1, X_2$ 具相關性且共變異矩陣相同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+圖 \ref{fig:knn_test_9} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:knn_test_9} 可看出，在資料分散程度小且共變異矩陣相同的情況下，$K = 5$ 的 K-近鄰演算法的訓練誤差低於$K = 15$ 的 K-近鄰演算法的訓練誤差。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_91.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_92.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 3} 
+\label{fig:knn_test_9}
+\end{figure}
+
+\textbf{\large 模擬訓練 4.(資料分散程度大、$X_1, X_2$ 具相關性且共變異矩陣不同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+3 & 0.5\\
+0.5 & 3
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+5 & 0.5\\
+0.5 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+圖 \ref{fig:knn_test_10} 左邊為設定 $K =5$，右邊為設定 $K = 15$ 下所繪製出之分界線，由圖 \ref{fig:knn_test_10} 可看出，在資料分散程度小且共變異矩陣相同的情況下，$K = 5$ 的 K-近鄰演算法的訓練誤差低於$K = 15$ 的 K-近鄰演算法的訓練誤差。
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.385]{\imgdir knn_test_101.jpg}
+\includegraphics[scale = 0.385]{\imgdir knn_test_102.jpg}
+\caption{K-近鄰演算法的群組分界線 : 模擬訓練 4} 
+\label{fig:knn_test_10}
+\end{figure}
+\subsection{三群不同資料在三種學習器訓練誤差與測試誤差之對比}
+表 \ref{tb:error_3} 為三種學習器訓練誤差之對比，表 \ref{tb:error_4} 為三種學習器測試誤差之對比。由表 \ref{tb:error_1} 可知，三種學習器在資料分散程度大的情況下，訓練誤差皆會高於資料分散程度小的情況，而除了當資料分散程度小且共變異矩陣相同的情況下 LDA 的訓練誤差最低之外，其餘的情況皆由 $K = 5$ 的 K-近鄰演算法的訓練誤差為最低。而由表 \ref{tb:error_2} 可知，三種學習器在資料共變異矩陣相同的情況下皆由 LDA 的測試誤差最低，而在資料共變異矩陣不同的情況下皆由 QDA 的測試誤差最低。
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{學習器訓練誤差之對比}\label{tb:error_3}
+\tabcolsep=12pt
+\begin{tabular}{ccccc} 
+\toprule
+& \multicolumn{4}{c}{學習器}\\
+\cmidrule(l){2-5}
+資料型態 & LDA & QDA & 5-NN & 15-NN\\[3pt]
+\midrule
+資料分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0672 & 0.0683  & 0.0675 & 0.0684 \\[3pt]
+資料分散程度大且共變異矩陣不同 & 0.1911 & 0.1624 & \cellcolor{red!25}0.1495 & 0.1699 \\[3pt]
+分散程度小、具相關性且共變異矩陣相同 & 0.0720 &  0.0732 & \cellcolor{red!25}0.0559 & 0.0713 \\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.2056 &  0.1763 & \cellcolor{red!25}0.1534 & 0.1762 \\ 
+\bottomrule
+\end{tabular}
+\end{table}\bigskip
+\begin{table}[H] 
+\centering
+\caption{學習器測試誤差之對比}\label{tb:error_4}
+\tabcolsep=12pt
+\begin{tabular}{ccccc} 
+\toprule
+& \multicolumn{4}{c}{學習器}\\
+\cmidrule(l){2-5}
+資料型態 & LDA & QDA & 5-NN & 15-NN\\[3pt]
+\midrule
+資料分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0644 & 0.0654  & 0.0828 & 0.0703 \\[3pt]
+資料分散程度大且共變異矩陣不同 & 0.1901 & \cellcolor{red!25}0.1641 & 0.1871 & 0.1908 \\[3pt]
+分散程度小、具相關性且共變異矩陣相同 & \cellcolor{red!25}0.0704 & 0.0728 & 0.0791 & 0.0767 \\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.2048 &  \cellcolor{red!25}0.1801 & 0.2063 & 0.1960 \\
+\bottomrule
+\end{tabular}
+\end{table} 
+\section{結語}
+本次的作品介紹了三種監督式學習之學習器，分別為線性判別式分析、二次判別式分析以及K-近鄰演算法，並且說明了三種學習器之理論、分群方法與實作，最後分別透過生成兩個群組及三個群組的模擬資料訓練評比三種學習器。
+%\end{document}

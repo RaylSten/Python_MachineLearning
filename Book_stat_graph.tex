@@ -1,0 +1,310 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{Python 機率分配與隨機亂數 \,}}
+%\author{\small 陳柏維 \\
+%{\small \it 國立臺北大學統計研究所}}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{Python 機率分配與隨機亂數}
+本文將介紹 Python 將大學期間所學過的各種分配函數，，搭配適當的統計圖形，希望能運用不同的繪圖技巧及參數表現，來表達數學式中所蘊藏的深刻意義。最後透過 Python 展示隨機亂數的視覺化表現與驗證數理統計上的定理。
+
+\section{機率分配}
+本節將使用 Python 繪圖的方式，描述各種機率分配函數的特色，利於讀者更充分了解不同分配的特性。以下會分別介紹離散型與連續型的機率分配。
+\subsection{連續型機率分配}
+
+\begin{enumerate}
+\item
+Normal distribution, $X \sim \mathcal{N}(\mu, \sigma^2)$ 
+\vspace{0.2cm}
+
+$\displaystyle f_X(x) = \frac{1}{\sqrt{2\pi \sigma^2}}e^{-(x-\mu)^2/2\sigma^2}, \,\,-\infty < x < \infty,\,\, -\infty < \mu < \infty,\,\, \sigma > 0$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+呈現鐘形分配，亦即中央部份密度較大，兩邊極端部份密度較小
+\item
+以期望值 $\mu$ 為對稱中心的對稱分配
+\item
+對稱分配: $\alpha_3 = 0$，常態峰: $\alpha_4 = 3$。\footnote{$\alpha_3$ 為偏態係數，$\alpha_4$ 為峰態係數} 
+\item
+反曲點位置: $\mu \pm \sigma$
+\end{itemize}
+
+圖 \ref{fig:normal_1} 為不同變異數下常態分配之變化，可看出變異數會影響機率密度函數之集中程度。
+\bigskip
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.7]{\imgdir normal_1.eps}
+    \caption{在固定期望值下，常態分配之 PDF}
+    \label{fig:normal_1}
+\end{figure}
+
+圖 \ref{fig:normal_2} 為利用子圖展現不同期望值與變異數之常態分配變化，可看出期望值會影響機率密度函數之中心位置。
+\bigskip
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir normal_2.eps}
+    \caption{常態分配之 PDF}
+    \label{fig:normal_2}
+\end{figure}
+\newpage
+\item
+Chi-square distribution, $X \sim \chi^2(v)$, where $v$ is the degrees of freedom 
+\vspace{0.2cm}
+
+$\displaystyle f_X(x) = \frac{1}{\Gamma(v/2)2^{v/2}}x^{v/2 - 1}e^{-x/2},\,\, 0 < x < \infty$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+If $Z \sim \mathcal{N}(0, 1),\,\, \text{let}\,\, Y = Z^2,\,\, \text{then}\,\, Y = Z^2 \sim \chi^2(1)$
+\item
+卡方分配是一種 Gamma 分配: $\chi^2(v) \sim \text{Gamma}(\alpha = \displaystyle \frac{v}{2}, \beta = 2)$
+\item
+卡方分配之可加性: Let $\!\perp\!\!\!\perp 
+\left\{\begin{array}{ll} 
+X \sim \chi^2(v_1) &\\ 
+Y \sim \chi^2(v_2), &
+\end{array}\right.$ then $U = X + Y \sim \chi^2(v_1 + v_2)$ 
+\end{itemize}
+
+圖 \ref{fig:chi} 為不同自由度下卡方分配之變化。可看出當自由度小時，呈現右偏分配，自由度越大，越接近常態分配。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir chi.eps}
+    \caption{在不同自由度下，卡方分配之 PDF}
+    \label{fig:chi}
+\end{figure}
+
+\item
+Student's t distribution, $T \sim t(v)$, where $v$ is the degrees of freedom 
+\vspace{0.2cm}
+
+$\displaystyle f_T(t) = \frac{\Gamma(\frac{v+1}{2})}{\Gamma(\frac{v}{2})}\frac{1}{\sqrt{v\pi}}\bigg(1 + \frac{t^2}{v}\bigg)^{-(v+1)/2},\,\, -\infty < t < \infty$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+以0為對稱中心的對稱分配
+\item
+當自由度趨近於無限大時，t分配會收斂至標準常態分配, $t(v) \xrightarrow[v \to \infty]{d} \mathcal{N}(0, 1)$
+\item
+當自由度為1時，t分配為標準柯西分配, $t(1) \sim \text{Cauchy}(0, 1)$
+\end{itemize}
+
+圖 \ref{fig:t} 為不同自由度下t分配之變化，可看出自由度會影響機率密度函數之集中程度，而當自由度越大，t分配會漸近於標準常態分配。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir t.eps}
+    \caption{在不同自由度下，t 分配之 PDF}
+    \label{fig:t}
+\end{figure}
+
+\item
+Snedecor's F distribution, $F \sim \mathcal{F}(v_1, v_2)$, where $v_1$ and $v_2$ are the degrees of freedom 
+\vspace{-0.4cm}
+
+$\displaystyle f_F(f) = \frac{\Gamma((v_1+v_2)/2)}{\Gamma(v_1/2)\Gamma(v_2/2)}\bigg(\frac{v_1}{v_2}\bigg)^{v_1/2}f^{(v_1/2)-1}\bigg(1 + \frac{v_1}{v_2}f\bigg)^{-(v_1+v_2)/2},\,\, f > 0$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+當自由度小時，呈現右偏分配，自由度越大，越接近常態分配
+\item
+$\displaystyle F \sim \mathcal{F}(v_1, v_2) \Longrightarrow \frac{1}{F} \sim \mathcal{F}(v_2, v_1)$
+\item
+與 t 分配之關係，$T \sim t(v_2) \Longrightarrow T^2 \sim \mathcal{F}(1, v_2)$
+\item
+與卡方分配之關係，$F \sim \mathcal{F}(v_1, \infty) \Longrightarrow v_1F \sim \chi^2(v_1)$
+\item
+與標準常態分配之關係，$Z \sim \mathcal{N}(0, 1) \Longrightarrow Z^2 \sim \chi^2(1) \sim \mathcal{F}(1, \infty)$
+\end{itemize}
+
+圖 \ref{fig:f} 為不同自由度下F分配之變化，可看出當自由度小時，呈現右偏分配，自由度越大，越接近常態分配。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir f.eps}
+    \caption{在不同自由度下，F 分配之 PDF}
+    \label{fig:f}
+\end{figure}
+\item
+Beta distribution, $X \sim \text{Beta}(\alpha, \beta)$
+\vspace{0.2cm}
+
+$\displaystyle f_X(x) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}x^{\alpha - 1}(1 - x)^{\beta - 1},\,\, 0 < x < 1,\,\,\alpha > 0, \,\,\beta > 0$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+Beta$(\alpha = 1, \beta = 1) \sim \mathcal{U}(0, 1)$
+\item
+Let $\!\perp\!\!\!\perp 
+\left\{\begin{array}{ll} 
+X \sim \text{Gamma}(\alpha_1, \beta) &\\ 
+Y \sim \text{Gamma}(\alpha_2, \beta), &
+\end{array}\right.$ then $\displaystyle \frac{X}{X + Y} \sim \text{Beta}(\alpha = \alpha_1, \beta = \alpha_2)$ 
+\item
+Let $\!\perp\!\!\!\perp 
+\left\{\begin{array}{ll} 
+X \sim \text{Exp}(\beta) &\\ 
+Y \sim \text{Exp}(\beta), &
+\end{array}\right.$ then $\displaystyle \frac{X}{X + Y} \sim \text{Beta}(\alpha = , \beta = 1)\sim \mathcal{U}(0, 1)$ 
+\bigskip
+\end{itemize}
+
+圖 \ref{fig:beta} 為改變參數 $\alpha$ 與 $\beta$ ， Beta 分配之變化，可看出 $\alpha$ 會影響圖形右偏程度，$\beta$ 會影響圖形左偏程度。
+\vspace{-0.2cm}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir beta.eps}
+    \caption{在不同 $\alpha$、$\beta$ 下，Beta 分配之PDF}
+    \label{fig:beta}
+\end{figure}
+\end{enumerate}
+
+\subsection{離散型機率分配}
+\begin{enumerate}
+\item
+Negative binomial distribution, $X \sim \mathcal{NB}(r, p)$
+\vspace{0.2cm}
+
+$\displaystyle f_X(x) = \dbinom{x - 1}{r - 1}p^{r}(1 - p)^{x - r},\,\, x = r, r + 1, \cdots, \infty,\,\, r \in \mathbb{N},\,\, 0 < p < 1$
+\vspace{0.2cm}
+
+函數特性 : 
+\begin{itemize}
+\item
+$r = 1$時為幾何分配，Geo$(p) \sim \mathcal{NB}(r = 1, p)$
+\item
+與二項式分配之對偶關係，let $X \sim \mathcal{NB}(r, p)$ and $Y \sim \mathcal{B}(n, p)$, then 
+
+$P(X > n) = P(Y < r)$
+\item
+負二項分配之可加性: 
+
+Let $\!\perp\!\!\!\perp 
+\left\{\begin{array}{ll} 
+X \sim \mathcal{NB}(r_1, p) &\\ 
+Y \sim \mathcal{NB}(r_2, p), &
+\end{array}\right.$ then $U = X + Y \sim \mathcal{NB}(r_1 + r_2, p)$ 
+\end{itemize}
+
+圖 \ref{fig:nb} 為負二項分配之機率質量函數與累積分配函數圖。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.8]{\imgdir nb.eps}
+    \caption{負二項式分配之PMF 和 CDF，$r = 3$ 且 $p = 0.1$}
+    \label{fig:nb}
+\end{figure}
+\end{enumerate}
+
+\section{隨機抽樣}
+從母體中隨機地抽取 $n$ 個單位作為樣本，使得每一個樣本都有相同的機率被抽中。以下將從指數分配與t分配中隨機抽取樣本，並對抽取樣本數進行分析。
+\begin{enumerate}
+\item
+Exponential distribution, $X \sim \text{Exp}(\theta)$
+
+從指數分配中，分別選擇抽取的樣本數為 $n = 50, 100$，透過直方圖、盒鬚圖、常態機率圖及經驗累積密度函數呈現抽取不同樣本數，如圖 \ref{fig:exp_1}、圖 \ref{fig:exp_2} 所示。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.6]{\imgdir exp_1.eps}
+    \caption{模擬指數分配，樣本數 50}
+    \label{fig:exp_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.6]{\imgdir exp_2.eps}
+    \caption{模擬指數分配，樣本數 100}
+    \label{fig:exp_2}
+\end{figure}
+
+\item
+t distribution with degrees of freedom $= 2$
+\vspace{0.2cm}
+
+從 t 分配中，分別選擇抽取的樣本數為 $n = 50, 100$，透過直方圖、盒鬚圖、常態機率圖及經驗累積密度函數呈現抽取不同樣本數，如圖 \ref{fig:t_1}、圖 \ref{fig:t_2} 所示。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.52]{\imgdir t_1.eps}
+    \caption{模擬 t 分配，樣本數 50}
+    \label{fig:t_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.52]{\imgdir t_2.eps}
+    \caption{模擬 t 分配，樣本數 100}
+    \label{fig:t_2}
+\end{figure}
+\end{enumerate}
+由指數分配與 t 分配的隨機抽樣可看出，指數分配為右偏分配， t 分配為不偏分配，而當抽取樣本數越高，直方圖與常態分配的PDF曲線較為貼合，ECDF 也與真實 CDF 較為接近。
+
+\section{抽樣分配}
+
+\begin{enumerate}
+\item
+驗證若 $Z$ 服從標準常態分配，則 $Z^2$ 服從卡方分配，自由度為 1。
+ 
+由圖 \ref{fig:chi_1} 可看出，直方圖與卡方分配(自由度為1)的PDF曲線貼合，ECDF 也與真實 CDF 接近，故此驗證成功。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.65]{\imgdir chi_1.eps}
+    \caption{模擬卡方分配，自由度為 1}
+    \label{fig:chi_1}
+\end{figure}
+
+\item
+驗證卡方分配自由度加成性，若 $X_1$ 服從卡方分配，自由度為 2 且 $X_2$ 服從卡方分配，自由度為6，則 $Y = X_1 + X_2$ 服從卡方分配，自由度為 6。
+
+由圖 \ref{fig:chi_2} 可看出，當樣本數越高，直方圖與卡方分配(自由度為6)的PDF曲線越貼合，故此驗證成功。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.56]{\imgdir chi_2.eps}
+    \caption{模擬卡方分配之 PDF，樣本數分別為 30, 100, 500, 1000}
+    \label{fig:chi_2}    
+\end{figure}
+由圖 \ref{fig:chi_3} 可看出，當樣本數越高，ECDF 與真實 CDF 越接近，故此驗證成功。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.56]{\imgdir chi_3.eps}
+    \caption{模擬卡方分配之 CDF，樣本數分別為 30, 100, 500, 1000}
+    \label{fig:chi_3}    
+\end{figure}
+
+\item
+中央極限定理(Central Limit Theorem, CLT)
+
+無論母體分配為何，只要樣本數足夠大時，則樣本平均數 $\bar{X}$ 會漸進於常態分配。
+
+此次實驗隨機樣本來自 $\mathcal{U}(0, 1)$，令樣本數為 $n = 5, 10, 30, 50, 100, 300$，且每次實驗共抽樣 $N = 10000$ 次。由圖 \ref{fig:clt} 可看出，當樣本數越高，直方圖與常態分配的PDF曲線越貼合，故此驗證成功。
+\vspace{-0.5cm}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.86]{\imgdir clt.eps}
+    \caption{中央極限定理}
+    \label{fig:clt}    
+\end{figure}
+
+\end{enumerate}
+
+\section{結語}
+此次作品藉由過去所學過的機率分配，透過 Python 繪製離散型及連續型分配的圖形，同時複習各分配重要的特性，搭配以往計算證明的經驗，用圖形來同步驗證，不僅重新複習了分配的參數範圍及分配函數的特色，加深我們對分配的了解，也學習了許多程式撰寫的技巧。
+%\end{document}

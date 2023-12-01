@@ -1,0 +1,631 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{Python 基礎繪圖與繪圖技巧 \,}}
+%\author{\small 陳柏維\footnote{E-mail: {\it s711033120@gm.ntpu.edu.tw}} \\
+%{\small \it 國立臺北大學統計研究所}}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{Python 基礎繪圖與繪圖技巧}
+本文將介紹 Python 的繪圖套件「Matplotlib」，透過更改 Matplotlib 的預設參數，例如 : 顏色、樣式、粗細等，搭配散佈圖及折線圖，達到更好的呈現效果。
+
+\section{Matplotlib 介紹}
+Matplotlib 是一個 Python 的繪圖套件，它可以將資料視覺化，使我們未來在做資料分析時比較好觀察資料的走向。
+\subsection{圖例}
+
+圖例用於說明繪製在圖形上的資料，透過元素或顏色來解釋資料。在 Matplotlib 圖形中，可以使用 \verb|plt.legend()| 函式新增圖例。
+\bigskip
+\begin{lstlisting}[language = Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(-3, 3, 100)
+f1 = lambda x : np.exp(x)
+f2 = lambda x : np.exp(-x)
+fig, ax = plt.subplots(figsize=(5,4))
+ax.plot(x, f1(x), c = 'r', label = r'$y=e^x$')
+ax.plot(x, f2(x), c = 'g', label = r'$y=e^{-x}$')
+plt.legend()
+plt.show()
+\end{lstlisting}
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{\imgdir legend_1.eps}
+\includegraphics[scale=0.6]{\imgdir legend_2.eps}
+\caption{Exponential function}
+\label{fig:legend}
+\end{figure}
+
+\verb|plot| 函式中的 \verb|linewidth| 引數可用於控制特定物件的繪圖寬度，\verb|set_linewidth()| 方法可用於控制 Matplotlib 中圖例的線寬。如圖 \ref{fig:legend} 所示。
+\bigskip
+\begin{lstlisting}[language = Python]
+ax.plot(x, f1(x), c = 'r', label = r'$y=e^x$', \
+	linewidth = 2.0) 
+ax.plot(x, f2(x), c = 'g', label = r'$y=e^{-x}$', \
+	linewidth = 4.0)
+leg = plt.legend()
+leg.get_lines()[0].set_linewidth(6) # 調整圖例線寬
+leg.get_lines()[1].set_linewidth(10)
+\end{lstlisting}
+
+圖例可以透過使用 \verb|bbox_to_anchor| 放置在 Matplotlib 中的繪圖之外。\verb|bbox| 表示容納圖例的邊界框 - \verb|bounding box|。若未呼叫 \verb|tight_layout()|，則圖例框將被裁剪。而利用此參數時，需重新調整圖片之寬度與長度，如圖 \ref{fig:legend_1} 所示。
+\bigskip
+\begin{lstlisting}[language = Python]
+fig, ax = plt.subplots(figsize=(6,4))
+ax.plot(x, f1(x), c = 'r', label = r'$y=e^x$')
+ax.plot(x, f2(x), c = 'g', label = r'$y=e^{-x}$')
+plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+plt.tight_layout()
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir legend_3.eps}
+    \caption{Exponential function 1}
+    \label{fig:legend_1}
+\end{figure}
+\subsection{散佈圖}
+在 Matplotlib 中，我們可以使用 \verb|plt.scatter()| 函式繪製散佈圖。透過函式 \verb|scatter()| 中的 \verb|s| 控制散點圖中標記的大小，如圖 \ref{fig:size} 所示。
+\begin{lstlisting}[language = Python]
+x = [1,2,3,4,5]
+y = [a**2 for a in x]
+s = [10*4**n for n in range(len(x))]
+plt.scatter(x, y, s = s, color = 'purple')
+plt.title('Doubling width of marker in scatter plot')
+plt.xlabel('x')
+plt.ylabel(r'$x^2$')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir size.eps}
+    \caption{Scatter plot marker size}
+    \label{fig:size}
+\end{figure}
+透過函式 \verb|projection = 'polar'| 可將座標改為極座標，圖 \ref{fig:polar} 為利用隨機生成之半徑及弧度所畫出的圖形，用以比較直角座標與極座標之差異。
+
+\begin{lstlisting}[language = Python]
+N = 100
+r = 2 * np.random.rand(N) 
+theta = 2*np.pi*np.random.rand(N)
+area = 8*r**2 				      
+colors = theta                    
+ax = plt.subplot(211)
+c = ax.scatter(theta, r, c = colors, s = area, cmap = 'hsv')
+ax = plt.subplot(212, projection = 'polar') # 轉換極座標
+c = ax.scatter(theta, r, c = colors, s = area, cmap = 'hsv')
+plt.subplots_adjust(wspace = 0.4, hspace = 0.4)
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.95]{\imgdir polar.eps}
+    \caption{Polar scatter plot}
+    \label{fig:polar}
+\end{figure}
+
+透過函式 \verb|scatter()| 中的 \verb|marker| 更改散點圖中標記圖案，並透過 \verb|marker = '$ $'|定義出非常規之圖形，圖 \ref{fig:marker} 為撲克牌的四個花色。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = [1,2,3,4]
+y1 = [i**2 for i in x]
+y2 = [i**2+5 for i in x]
+y3 = [7*i+3 for i in x]
+y4 = [7*i+7 for i in x]
+plt.scatter(x, y1, marker = '$\diamondsuit$', \
+	color ='r', s = 100, label = r"$x^2$")
+plt.scatter(x, y2, marker = '$\heartsuit$', \
+	color ='r', s = 100, label = r"$x^2+5$")
+plt.scatter(x, y3, marker = '$\clubsuit$', \
+	color = 'black', s = 100, label = r"$7x+3$")
+plt.scatter(x, y4, marker = '$\spadesuit$', \
+	color = 'black', s = 100, label = r"$7x+7$")
+\end{lstlisting}
+\begin{figure}[h]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir marker.eps}
+    \caption{Scatter plot marker}
+    \label{fig:marker}
+\end{figure}
+
+透過函式 \verb|plt.clim()| 在 Matplotlib 中設定顏色條的範圍。如圖 \ref{fig:clim} 所示。
+\bigskip
+\begin{lstlisting}[language = Python]
+import random
+s_x = random.sample(range(0, 100), 20)
+s_y = random.sample(range(0, 100), 20)
+s = plt.scatter(s_x,s_y,c = s_x, cmap = 'plasma')
+c = plt.colorbar()
+plt.clim(0, 150) 
+\end{lstlisting}
+\begin{figure}[h]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir clim.eps}
+    \caption{Scatter plot cilm}
+    \label{fig:clim}
+\end{figure}
+
+在 Matplotlib 中若想將散佈圖上的點用線連接，可以透過 \verb|zorder| 來設定 Matplotlib 圖中的繪製順序來設定 Matplotlib 圖中的繪製順序，將 \verb|plot| 和 \verb|scatter| 分配不同的順序，然後顛倒順序以顯示不同的繪製順序行為，如圖 \ref{fig:point_line} 所示。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(0, 5, 50)
+y = np.exp(2*x)
+plt.scatter(x, y, color = 'r', s = 25, zorder = 1)
+plt.plot(x, y, color = 'b', zorder = 2)
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir point_line.eps}
+    \caption{Connected Scatterplot points with line}
+    \label{fig:point_line}
+\end{figure}
+
+\subsection{折線圖}
+在 Matplotlib 中，可以使用 \verb|plt.plot(x, y, 'style_code')| 函式繪製折線圖。
+\begin{itemize}
+\item
+x : position along the x-axis
+\item
+y : position along the y-axis
+\item
+style code : abbreviation code for line color, line style, and marker style
+\end{itemize}
+圖 \ref{fig:multiple_lines} 為折線圖各種面貌之展現，如線的顏色、樣式、粗細。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-2, 2, 50)
+y1 = np.exp(x)
+y2 = np.exp(-x)
+y3 = x**2+5
+y4 = -x**2-2
+plt.plot(x, y1, 'k--o', \
+	linewidth = 1.0) # black dashed line with circle marker
+plt.plot(x, y2, 'g:d', \
+	linewidth = 3.0) # green dotted line with dimond marker
+plt.plot(x, y3, 'r*', \
+	linewidth = 5.0) # red "*" marker (no line)
+plt.plot(x, y4, 'm-.', \
+	linewidth = 7.0) # magenta dot-dashed line (no marker)
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.65]{\imgdir multiple_lines.eps}
+    \caption{Multiple lines in one figure}
+    \label{fig:multiple_lines}
+\end{figure}
+
+利用以下指令，可以在圖的不同位置加上文字 : 
+\begin{itemize}
+\item
+\verb|plt.title('string', fontsize = n)|: 加標題
+\item
+\verb|plt.xlabel('string', fontsize = n)|: 加 x 軸名稱
+\item
+\verb|plt.ylabel('string', fontsize = n)|: 加 y 軸名稱
+\item
+\verb|plt.text(xp, yp, 'string', fontsize = n)|: 在 (\verb|xp|, \verb|yp|) 的位置加入文字
+\end{itemize}
+自訂座標軸刻度與刻度上的標記文字
+\begin{itemize}
+\item
+\verb|plt.xticks([array of tick],[list of tick labels]) |: x 軸刻度、標記
+\item
+\verb|plt.yticks([array of tick],[list of tick labels]) |: y 軸刻度、標記
+\item
+\verb|plt.xticks| 要寫在 \verb|plt.xlim| 之前，否則會被 \verb|xlim| 的設定蓋過
+\end{itemize}
+圖 \ref{fig:axis} 將以上函數結合至一張圖上。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(0, 5, 30)
+y = x**2 + 2
+plt.plot(x, y, 'y--')
+plt.xticks(np.linspace(0, 5, 11)) 
+plt.xlim([0, 5])
+plt.ylim([0, 30])
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title(r'$y = x^2 + 2$')
+plt.text(2, 20, r'$y = x^2 + 2$', fontsize = 18)
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir axis.eps}
+    \caption{Change the axis and tick mark}
+    \label{fig:axis}
+\end{figure}
+
+Python 預設使用線性座標 (linear)，要調整為對數座標 (log) 需利用 \verb|plt.xscale('log')| 函式，而若要指定以 k 為底則需在後面加入 \verb|base = k|，如圖 \ref{fig:log} 所示。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = [10, 100, 1000, 10000, 100000]
+y = [2, 4 ,8, 16, 32]
+
+plt.scatter(x, y, color = 'r')
+plt.plot(x, y, 'c')
+plt.grid()
+plt.xscale('log')
+plt.yscale('log', base = 2)
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.65]{\imgdir log.eps}
+    \caption{Plot with both log axes}
+    \label{fig:log}
+\end{figure}
+
+透過 \verb|plt.subplots(m, n)| 新增子圖，將列數 \verb|m| 和行數 \verb|n| 作為引數傳遞返回一個圖物件和軸物件，用來操作圖形。使用 \verb|subplots()| 在 \verb|n| 行 \verb|m| 列的網格中生成一個有 \verb|m x n| 個子圖的圖形。第 1 個子圖利用 ax 列表中的第 1 個元素進行操作，第 2 個子圖利用 ax 列表中的第 2 個元素進行操作，依此類推。如果沒使用 \verb|tight_layout()| 函式，則該行座標軸將與下一行的標題重疊。圖 \ref{fig:subplot} 利用子圖的方式呈現四個著名的激勵函數。
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-3, 3, 100)
+y1 = np.exp(x)
+y2 = (np.exp(x) - np.exp(-x))/(np.exp(x) + np.exp(-x))
+y3 = 1/(1 + np.exp(-x))
+y4 = np.log(1 + np.exp(x))
+
+fig, ax = plt.subplots(2, 2, figsize=(8, 6)) # 新增子圖
+ax[0, 0].plot(x, y1, 'r')
+ax[0, 1].plot(x, y2, 'c--')
+ax[1, 0].plot(x, y3, 'g:')
+ax[1, 1].plot(x, y4, 'y-.')
+
+ax[0, 0].set_title("Exponential function")
+ax[0, 1].set_title("Hyperbolic tangent function")
+ax[1, 0].set_title("Sigmoid function")
+ax[1, 1].set_title("Softplus function")
+fig.tight_layout()
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.7]{\imgdir subplot.eps}
+    \caption{Activation functions}
+    \label{fig:subplot}
+\end{figure}
+
+\section{函數圖形練習}
+
+\begin{enumerate}
+\item
+$f(x) = sin(x) + cos(x)$
+
+注意事項 : 
+\begin{itemize}
+\item
+繪製三角函數圖形必須留意其週期
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-3*np.pi, 3*np.pi, 200)
+f1 = lambda x : np.sin(x)
+f2 = lambda x : np.cos(x)
+f3 = lambda x : np.sin(x) + np.cos(x)
+fig, ax = plt.subplots()
+ax.plot(x, f1(x), color = 'g', label = 'sin(x)')
+ax.plot(x, f2(x), color = 'm', label = 'cos(x)')
+ax.plot(x, f3(x), color = 'c', label = 'sin(x)+cos(x)')
+ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3])*np.pi)
+ax.set_xticklabels(['-3$\pi$', '-2$\pi$', '$\pi$', '0', \
+  '$\pi$','2$\pi$','3$\pi$'], fontsize = 10, color = 'b')
+ax.set_ylim([-3, 3])
+ax.grid(True), ax.legend()
+ax.set_xlabel('X'), ax.set_ylabel('f(x)')
+ax.set_title('sin(x) and cos(x)')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir sincos.eps}
+\end{figure}
+
+\item
+$\displaystyle f(x) = \frac{1-e^{-2x}}{1+e^{-2x}}$
+\vspace{0.2cm}
+
+注意事項 :
+\begin{itemize}
+\item
+水平漸進線為 $y = 1$ 與 $y = -1$
+\item
+$(0, 0)$ 為反曲點(Inflection point)
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-10, 10, 100)
+f = lambda x : (1 - np.exp(-2*x))/(1 + np.exp(-2*x))
+fig = plt.figure()
+plt.plot(x, f(x), color = 'c')
+plt.hlines(y = 1, xmin = -12, xmax = 12, color = 'r', \
+	linestyles = '--')
+plt.hlines(y = -1, xmin = -12, xmax = 12, color = 'r', \
+	linestyles = '--')
+plt.text(0, 0, 'x', color = 'k', fontsize = 15, \
+ 	horizontalalignment = 'center', \
+ 	verticalalignment = 'center')
+plt.grid(True)
+plt.xlabel('X'), plt.ylabel('Y')
+plt.ylim([-2, 2])
+plt.title(r'$f(x)= \frac{1 - e^{-2x}}{1 + e^{-2x}}$')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir exp.eps}
+\end{figure}
+\item
+$\displaystyle f(x) = \sqrt[3]{\frac{4-x^3}{1+x^2}}$
+\vspace{0.2cm}
+
+注意事項 : 
+\begin{itemize}
+\item
+利用 \verb|np.cbrt()| 函式對函數開三分之一次方
+\item
+局部極大值(local maximum)\footnote{如果存在一個 $\epsilon > 0$，使得所有滿足 $|x - x^*| < \epsilon$ 的 $x$ 都有 $f(x^*)\geq f(x)$，我們就把點 $x^*$ 對應的函數值 $f(x^*)$ 稱為一個函數 $f$ 的局部極大值。} 為 1.587410 
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-5, 5, 100)
+f = lambda x : np.cbrt((4 - x**3)/(1 + x**2))
+fig = plt.figure()
+plt.plot(x, f(x), color = 'g')
+plt.grid(True)
+plt.xlabel('X'), plt.ylabel('Y')
+plt.text(0, f(0), 'x', color = 'r', fontsize = 15, \
+    horizontalalignment = 'center', \
+    verticalalignment = 'center')
+plt.ylim([-2, 2])
+plt.title(r'A local maximum is {:.6f} \
+		at x = 0'.format(f(0)))
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.75]{\imgdir cbrt.eps}
+\end{figure}
+\item
+$\displaystyle f(x) = \frac{1}{x}$
+\vspace{0.2cm}
+
+注意事項 : 
+\begin{itemize}
+\item
+當 $x = 0$ 時，$f(x)$ 為 $\infty$，因此畫圖時需移除 $x = 0$
+\item
+利用 \verb|np.setdiff1d(ar1, ar2)| 移除兩組數列之差值
+\item
+水平漸進線為 $y = 0$，垂直漸進線為 $x = 0$
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+def f(x): return 1/x
+xfn = np.setdiff1d(np.linspace(-10, 0, 100),[0])  
+xfp = np.setdiff1d(np.linspace(0, 10, 100),[0])   
+plt.plot(xfn, f(xfn), color = 'c', linewidth = 3.0)
+plt.plot(xfp, f(xfp), color = 'c', linewidth = 3.0)
+plt.hlines(y = 0, xmin = -10, xmax = 10, \
+	color = 'r', linestyles = '--', linewidth = 3.0)
+plt.vlines(x = 0, ymin = -10, ymax = 10, \
+	color = 'r', linestyles = '--', linewidth = 3.0)
+ax = plt.gca() # 設定坐標軸之線
+ax.spines['left'].set_position(('data', 0)) 
+ax.spines['bottom'].set_position(('data', 0)) 
+ax.spines['top'].set_color('none') 
+ax.spines['right'].set_color('none') 
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.73]{\imgdir reciprocal.eps}
+\end{figure}
+\item
+$\displaystyle f(x) = \frac{1}{2\sqrt{2\pi}}e^{\frac{-(x-1)^2}{8}}$
+\vspace{0.2cm}
+
+注意事項 : 
+\begin{itemize}
+\item
+此函數為常態分配， $\mathcal{N}(\mu = 1, \,\,\sigma^2 = 4)$
+\item
+對稱於 $x = 1$，且絕對極大值為 0.199471
+\item
+水平漸進線為 $y = 0$
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.7]{\imgdir normal_123.eps}
+\end{figure}
+\item
+$\displaystyle f(x) = \sqrt[3]{x^2}$
+\vspace{0.2cm}
+
+注意事項 : 
+\begin{itemize}
+\item
+在設定 $x$ 時，提高生成的樣本數，畫出圖形之極值點較為明顯
+\item
+對稱於 $x = 0$，且絕對極小值為 0
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.linspace(-10, 10, 1000)
+f = lambda x : np.cbrt(x**2)
+fig = plt.figure()
+plt.plot(x, f(x), color = 'k')
+plt.vlines(x = 0, ymin = 0, ymax = 10, \
+		color = 'c', linestyles = '--')
+plt.text(0, f(0), 'x', color = 'r', fontsize = 10, \
+    horizontalalignment ='center', \
+    verticalalignment ='center')
+plt.grid(True)
+plt.ylim([-0.1, 8])
+plt.title(r'$f(x)= \sqrt[3]{x^2}$')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.8]{\imgdir cbrt_1.eps}
+\end{figure}
+\bigskip
+\item
+$f(x) = 2x^3 - x^4$
+
+注意事項 : 
+\begin{itemize}
+\item
+利用 \verb|scipy| 套件中的 \verb|optimize| 找極值
+\item
+絕對極大值為 1.6875
+\item
+$(0, 0)$ 為反曲點
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+import scipy.optimize as opt
+
+x = np.linspace(-6, 6, 1000)
+g = lambda x : 2*x**3 - x**4
+fig = plt.figure(figsize = [6, 4])
+plt.plot(x, g(x), 'purple')
+f = lambda x : -g(x)
+res = opt.minimize_scalar(f, bounds = (0, 2))
+plt.text(res.x, -res.fun, 'x', color = 'r', \
+	horizontalalignment = 'center', \
+	verticalalignment = 'center')
+plt.grid(True)
+plt.ylim([-20, 4])
+plt.title(r'The function maximum is {:.4f} at \
+	x = {:.4f}'.format(-res.fun, res.x))
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.8]{\imgdir max.eps}
+\end{figure}
+\item
+$\displaystyle f(x) = \frac{\ln x}{x^3}$
+\vspace{0.2cm}
+
+注意事項 : 
+\begin{itemize}
+\item
+當 $x = 0$ 時，$f(x)$ 為 $-\infty$，因此畫圖時需移除 $x = 0$
+\item
+水平漸進線為 $y = 0$ ， 垂直漸進線為 $x =0$ ，絕對極大值為 0.1226
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+x = np.setdiff1d(np.linspace(0, 7, 500),[0])  
+g = lambda x : np.log(x)/(x**3)
+plt.plot(x, g(x), color = 'c')
+f = lambda x : -g(x)
+res = opt.minimize_scalar(f, bounds = (1, 2)) 
+plt.text(res.x, -res.fun, 'x', color = 'r', \
+	horizontalalignment = 'center', \
+	verticalalignment = 'center')
+plt.ylim([-3, 1])
+ax = plt.gca()
+ax.spines['left'].set_position(('data',0)) 
+ax.spines['bottom'].set_position(('data',0)) 
+ax.spines['top'].set_color('none')
+ax.spines['right'].set_color('none')
+plt.title(r'The function maximum is {:.4f} at \
+	x = {:.4f}'.format(-res.fun, res.x))
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.8]{\imgdir log_1.eps}
+\end{figure}
+\item
+$f(x) = 3,\quad 1 \leq x \leq 5$
+
+注意事項 : 
+\begin{itemize}
+\item
+利用 \verb|hlines(y, xmin, xmax)| 繪製水平線
+\item
+利用 \verb|vlines(x, ymin, ymax)| 繪製垂直線
+\item
+\verb|x|, \verb|y|, \verb|xmin|, \verb|xmax|, \verb|ymin|, \verb|ymax| 指的都是資料座標值
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+# 繪製水平線
+plt.hlines(y = 3, xmin = 1, xmax = 5, \
+	color = 'k', linewidth = 2.0)
+plt.title(r'$f(x) = 3, 1 \leq x \leq 5$')
+# 繪製垂直線
+plt.vlines(x = 3, ymin = 1, ymax = 5, \
+	color = 'k', linewidth = 2.0)
+plt.title(r'$x = 3, 1 \leq y \leq 5$')
+\end{lstlisting}
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.48]{\imgdir hline.eps}
+\includegraphics[scale = 0.48]{\imgdir vline.eps}
+\end{figure}
+\item
+$x^2 + y^2 = 1$. 
+
+注意事項 :
+\begin{itemize}
+\item 
+將座標轉為極座標，$x = rcos(\theta)$ and $y = rsin(\theta), \,\, 0 \leq \theta \leq 2\pi$	 
+\item
+利用 \verb|axis('equal')| 將座標軸設定為等寬模式
+\item
+利用 \verb|ax.spines[''].set_position(())|，調整四個方向之坐標軸
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+theta = np.linspace(0, 2*np.pi, 200) # 弧度
+r = 1 # 半徑
+x = r*np.cos(theta)
+y = r*np.sin(theta)
+plt.plot(x, y, color = 'g')
+plt.ylim([-2, 2])
+plt.title(r'$\mathrm{Parametric \,\,Equation \
+	\,\,Circle}: \,\, x^2+y^2 = 1$')
+plt.axis('equal')
+ax = plt.gca()
+ax.spines['left'].set_position(('data',0)) 
+ax.spines['bottom'].set_position(('data',0)) 
+ax.spines['top'].set_color('none')
+ax.spines['right'].set_color('none')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.8]{\imgdir circle.eps}
+\end{figure}
+\item 
+Draw a square of size $= 1$
+
+注意事項 :
+\begin{itemize}
+\item 
+利用 \verb|patches| 模組中的 \verb|Rectangle| 繪畫長方形
+\item
+利用 \verb|axis('equal')| 將座標軸設定為等寬模式
+\item
+利用 \verb|ax.spines[''].set_position(())|，調整四個方向之坐標軸
+\end{itemize}
+\bigskip
+\begin{lstlisting}[language = Python]
+fig, ax = plt.subplots()
+rec1 = pat.Rectangle((-0.5, -0.5), 1, 1, \
+	edgecolor = 'm', fill = False)
+ax.add_patch(rec1)
+plt.xlim([-2, 2])
+plt.ylim([-2, 2])
+plt.axis("equal")
+plt.title('A square of side 1')
+ax = plt.gca()
+ax.spines['left'].set_position(('data',0)) 
+ax.spines['bottom'].set_position(('data',0)) 
+ax.spines['top'].set_color('none')
+ax.spines['right'].set_color('none')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.7]{\imgdir square.eps}
+\end{figure}
+\end{enumerate}
+
+\section{結語}
+此次作品透過  Python 的繪圖套件「Matplotlib」 呈現散佈圖與折線圖，並嘗試更改其參數(顏色、樣式、粗細)等，最後透過 \LaTeX 編排 Python 程式碼與繪圖結果完成此次作品。
+
+%\end{document}

@@ -1,0 +1,600 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{\,\, \LaTeX 入門實用指南 \,}}
+%\author{\small 陳柏維\footnote{E-mail: {\it s711033120@gm.ntpu.edu.tw}} \\
+%{\small \it 國立臺北大學統計研究所}}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{\LaTeX 入門實用指南}
+因應  \LaTeX 已經成為國際上數學、物理、計算機等科技領域專業排版的標準，本文將以  \LaTeX 編排呈現文字變化(字體與顏色)、數學環境(方程式與矩陣)、表格、圖形等編排實用工具，作為使用  \LaTeX 編排的第一篇文章，也將作為未來碩士論文的參照範本。
+\section{文字字體與顏色}
+在設定字體與顏色時，可參考以下方法:
+\begin{itemize}
+\item
+利用\verb|\setCJKmainfont{}|設定中文內文字型
+\item
+利用\verb|\setmainfont{}|設定英文內文字型。
+\item
+若要使用其他中文字型則可利用\verb|\newCJKfontfamily{}|。
+\item
+若要使用其他英文字型則可以利用\verb|\newfontfamily{}|。
+\item
+利用\verb|\textcolor{}|設定字體顏色。
+\end{itemize}
+\subsection{中文展示}
+表 \ref{tb:basic_1} 用表格來展示不同的中文字體、顏色與大小。
+\begin{table}[h] 
+\centering
+\extrarowheight = 9pt
+\caption{中文字體、顏色與大小}\label{tb:basic_1}  
+\begin{tabular}{c|c|c}
+字體	             & 顏色	& 大小		\\
+\hline
+微軟正黑體	  & \textcolor{red}{紅色}	    & \Large{\textcolor{red}{大}}\\
+{\K 標楷體}    & \textcolor{blue}{{\K 藍色}}	& \large{\textcolor{blue}{中}}\\
+{\SM 新細明體} & \textcolor{green}{\SM 綠色}	& \small{\textcolor{green}{小}}\\
+\end{tabular}
+\end{table}
+\subsection{英文展示}
+{\A In years to come, Harry would never quite remember how he had managed to get through his exams when he half expected Voldemort to come bursting through the door at any moment. Yet the days crept by, and there could be no doubt that Fluffy was still alive and well behind the locked door.}\\
+It was sweltering hot, especially in the large classroom where they did their written papers. They had been given special, new quills for the exams, which had been bewitched with an Anticheating spell.\\
+{\E They had practical exams as well. Professor Flitwick called them one by one into his class to see if they could make a pineapple tapdance across a desk. Professor McGonagall watched them turn a mouse into a snuffbox — points were given for how pretty the snuffbox was, but taken away if it had whiskers. Snape made them all nervous, breathing down their necks while they tried to remember how to make a Forgetfulness potion.}\footnote{此篇文章擷取自 Rowling, J. K., 1997, Harry Potter and the Sorcerer's Stone.}\bigskip
+\section{數學環境}
+\subsection{文中數式 {\tt \$...\$}}
+\begin{enumerate}
+\item
+樣本平均數: $\bar{x} = \sum_{i = 1}^n x_i/n$。(\verb|$\bar{x}=\sum_{i=1}^n x_i/n$|)
+\item
+常見積分式: $\int_{0}^{\pi/2} \sin x\ dx$。(\verb|$\int_{0}^{\pi/2} \sin x\ dx$|)
+\end{enumerate}
+\subsection{單獨數式 {\tt \textbackslash[ ... \textbackslash] \$\$...\$\$}}
+\begin{enumerate}
+\item 
+\verb|\[ ... \]|， 單一數式無標號，號稱最美的數學公式: \\
+(\verb|\[ e^{i\pi} + 1 = 0. \qquad (\mbox{歐拉恆等式})\]|)
+\[ e^{i\pi} + 1 = 0. \qquad (\mbox{歐拉恆等式})\]
+\item
+\verb|$$ ... $$|， 單一數式無標號，乘法公式: \\
+(\verb|$$ (a + b)^2 = a^2 + 2ab + b^2. $$|)
+$$
+(a + b)^2 = a^2 + 2ab + b^2.
+$$
+\end{enumerate}\bigskip
+\subsection{方程式}
+\begin{enumerate}
+\item 
+\verb|\begin{equation} ... \end{equation}|，單一數式有標號，如式 \ref{eq:limit} 所示。\\
+The derivative of a function $f$ at a point $x_0$, denote $f'(x_0)$, is
+\begin{equation}\label{eq:limit}
+f'(x_0) = \lim_{h \rightarrow 0} \frac{f(x_0 + h) - f(x_0)}{h}
+\end{equation}
+provides this limit exists.\footnote{方程式 \ref{eq:limit} 為函數導數之定義。導數的本質是通過極限的概念對函數進行局部的線性逼近。當函數$f$的自變數在一點$x_0$上產生一個增量$h$時，函數輸出值的增量與自變數增量$h$的比值在$h$趨於$0$時的極限如果存在，即為$f$在$x_0$處的導數，記作$f'(x_0)$。}
+\item
+\verb|\begin{eqnarray} ... & ... & ... \end{eqnarray}|，多數式有標號，如式 \ref{eq:intro} 所示，其中若要某一數式不標號需加上 \verb|\nonumber|。\\
+\begin{eqnarray}\label{eq:intro}
+\text{maximize}\,L_d(\boldsymbol{\alpha}) & = & \sum_{i = 1}^m \alpha_i - \frac{1}{2} \sum_{i = 1}^m\sum_{j = 1}^m y_i y_j \alpha_i \alpha_j \mathbf{x_j}^T \mathbf{x_i} - \frac{1}{2C}\sum_{i = 1}^m \alpha_i^2 \nonumber \\
+& = & \sum_{i = 1}^m \alpha_i - \frac{1}{2} \sum_{i = 1}^m\sum_{j = 1}^m y_i y_j \alpha_i \alpha_j (\mathbf{x_j}^T \mathbf{x_i} + \frac{1}{C}\delta_{ij})\\
+&   & \text{subject to}\,\,\alpha_i \ge 0, \quad \sum_{i = 1}^m \alpha_i y_i = 0. \nonumber	
+\end{eqnarray}
+\item
+\verb|\left({\begin{array} ... & ... & ... \end{array}\right|，文中聯立方程式。\\
+\vspace{0.2cm}
+If a function satisfy $I_A(x) = 
+\left\{\begin{array}{ll} 
+1, & \,\, \mbox{if }x \in A\\ 
+0, & \,\, \mbox{otherwise} 
+\end{array}\right.$
+, then $I_A(x)$ is called the\\
+\vspace{0.3cm}
+indicator function and the event A is called the indicator event.
+\item
+\verb|\begin{cases} ... & ... & ... \end{cases}|，獨立聯立方程式。
+\[f(x) = \begin{cases} 
+x^2,  & \mbox{if }x\mbox{ is even} \\ 
+2x+1, & \mbox{if }x\mbox{ is odd} 
+\end{cases}\]
+\end{enumerate}\bigskip
+\subsection{矩陣分析}
+\begin{enumerate}
+\item
+矩陣的各種括號形式:
+\vspace{0.2cm}
+\[
+\begin{matrix} 
+a & b \\
+c & d 
+\end{matrix}
+\quad
+\begin{pmatrix} 
+a & b \\
+c & d 
+\end{pmatrix}
+\quad
+\begin{bmatrix} 
+a & b \\
+c & d 
+\end{bmatrix}
+\quad
+\begin{Bmatrix} 
+a & b \\
+c & d 
+\end{Bmatrix}
+\quad
+\begin{vmatrix} 
+a & b \\
+c & d 
+\end{vmatrix}
+\quad
+\begin{Vmatrix} 
+a & b \\
+c & d 
+\end{Vmatrix}
+\]
+
+\item
+上三角矩陣:
+\vspace{0.5cm}
+\[
+A = \begin{bmatrix}
+a_{11} & \dots  & a_{1n}\\
+       & \ddots & \vdots\\
+0      &        & a_{nn}
+\end{bmatrix}_{n \times n}
+\]
+
+\item
+分塊矩陣:
+\vspace{0.5cm}
+\[
+\begin{pmatrix}
+\begin{matrix} 1&0\\0&1 \end{matrix} & \text{\Large 0}\\
+\text{\Large 0}                      & \begin{matrix} 1&0\\0&1 \end{matrix}
+\end{pmatrix}
+\]
+
+\item
+文中小矩陣:\\
+Trying to typeset an inline matrix here:
+ $\begin{pmatrix}
+  a & b\\ 
+  c & d
+\end{pmatrix}$,  
+but it looks too big, so let's try 
+$\big(\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}\big)$ 
+instead.
+
+\item
+矩陣外圍標示項數，以Sylvester matrix為例。
+\vspace{0.5cm}
+\[
+Syl_i(A,B)=\left[\phantom{\begin{matrix}a_0\\ \ddots\\a_0\\b_0\\ \ddots\\b_0 \end{matrix}}
+\right.\hspace{-1.5em}
+\underbrace{\begin{matrix}
+a_m & \cdots & a_0 & \\
+\ddots & & \ddots & \\
+ & a_m & \cdots & a_0 \\
+b_n & \cdots & b_0 & \\
+\ddots & & \ddots & \\
+ & b_n & \cdots & b_0
+\end{matrix}}_{m+n-i}
+\hspace{-1.5em}
+\left.\phantom{\begin{matrix}a_0\\ \ddots\\a_0\\b_0\\ \ddots\\b_0 \end{matrix}}\right]\hspace{-1em}
+\begin{tabular}{l}
+$\left.\lefteqn{\phantom{\begin{matrix} a_0\\ \ddots\\ a_0\ \end{matrix}}}\right\}n-i$\\
+$\left.\lefteqn{\phantom{\begin{matrix} b_0\\ \ddots\\ b_0\ \end{matrix}}} \right\}m-i$
+\end{tabular}
+\]
+\end{enumerate}\bigskip
+\subsection{數學定義與定理}
+載入\verb|\usepackage{amsthm}|並在preamble中定義有編號的數學定義\\
+\verb|\newtheorem{definition}{Definition}|，若不想有編號則為\\
+\verb|\newtheorem*{definition}{Definition}|，而定理也為相似的設定。\\
+\bigskip
+\begin{center}
+\fbox{%
+\begin{minipage}{.8\textwidth}
+\begin{definition}
+Let $E$ be a nonempty subset of $\mathbb{R}$ and $f : E → \mathbb{R}$. Then $f$ is said to be uniformly continuous on $E$ (notation: $f : E → \mathbb{R}$ is uniformly continuous) if and only if for every $\epsilon > 0$ there is a $\delta > 0$ such that
+\begin{equation}
+|x - a| < \delta \quad \text{and} \quad x, a \in E \quad \Rightarrow \quad |f(x) - f(a)| < \epsilon.
+\end{equation}
+\end{definition}
+\end{minipage}}
+\end{center}
+\begin{center}
+\fbox{%
+\begin{minipage}{.8\textwidth}
+\begin{theorem}
+Suppose that $a < b$ and that $f : (a, b) \rightarrow \mathbb{R}$. Then $f$ is uniformly continuous on $(a, b)$ if and only if $f$ can be continuously extended to $[a, b]$; that is, if and only if there is a continuous function $g : [a, b] \rightarrow \mathbb{R}$ which satisfies
+\[ f(x) = g(x), \quad x \in (a, b).\]
+\end{theorem}
+\end{minipage}}
+\end{center}\bigskip
+\subsection{統計分配}
+統計上，分配之間的關係往往是我們所感興趣的研究方向，圖 \ref{fig:discrete} 為離散型機率分配之關係圖\footnote{圖 \ref{fig:discrete} 取材自張翔(2018), 《提綱挈領學統計》}。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.65]{\imgdir discrete.jpg}
+    \caption{離散型常用機率分配關係圖}
+    \label{fig:discrete}
+\end{figure}
+\subsection{數學式挑戰(\uppercase\expandafter{\romannumeral1})}
+$$W_{MA} = \frac{\bigg( \sum_{j = 1}^n a_j U_{(j)}\bigg)^2}{(\mathbf{X_0} - \bar{\mathbf{X}})^{\displaystyle '} A^{-1}(\mathbf{X_0} - \bar{\mathbf{X}})}$$
+
+$$D_{n, \beta} = \int |\,\psi_n(t) - exp \,\bigg( -\frac{\lVert\, t \,\lVert ^2}{2} \bigg) \,|^2 \,\varphi_{\beta}(t)dt$$
+
+$$SR = n \,\bigg(\frac{2}{n}\sum_{j = 1}^{n} E\,\lVert\,y_i - Z\,\lVert \,- 2\frac{\Gamma((p+1)/2)}{\Gamma(p/2)} - \frac{1}{n^2} \sum_{j,k = 1}^{n}\, \lVert\, y_i - y_k \,\lVert\,\bigg)$$
+
+$$ \theta = \bigg(
+\begin{array}{c}
+\theta_1 \\
+\theta_2 
+\end{array} \bigg) = \left(
+\begin{array}{c}
+\theta_{10} \\
+\theta_{11} \\
+\theta_{12} \\
+\theta_{20} \\
+\theta_{21} \\
+\theta_{22}
+\end{array} \right), \,\,D = \left( 
+\begin{array}{cc}
+D11 & D12\\
+D21 & D21
+\end{array} \right) = \left[
+\begin{array}{ccc|ccc}
+a & b & c & g & h & i \\
+b & d & e & h & j & k \\
+c & e & f & i & k & l \\
+\hline
+g & h & i & m & n & o \\
+h & j & k & n & p & q \\
+i & k & l & o & q & r 
+\end{array} \right] 
+$$\bigskip
+
+\subsection{數學式挑戰(\uppercase\expandafter{\romannumeral2})}
+\begin{eqnarray}
+Q(\beta, \gamma) & = & E \bigg[\text{log}\bigg\{\prod_{i = 1}^n [\pi(\mathbf{Z_i^*}, \mathbf{X_i})]^{y_i}[1 - \pi(\mathbf{Z_i^*}, \mathbf{X_i})]^{1 - y_i} \bigg\}\bigg]\nonumber\\
+& = & E \bigg[\text{log}\prod_{i = 1}^n \bigg\{ \frac{exp(y_i(\beta^{\prime}\mathbf{Z_i^*} + \gamma^{\prime}\mathbf{X_i}))}{1 + exp(\beta^{\prime}\mathbf{Z_i^*} + \gamma^{\prime}\mathbf{X_i})}\bigg\}\bigg]\nonumber\\
+& = & \sum_{i = 1}^n y_i E[\beta^{\prime}\mathbf{Z_i^*} + \gamma^{\prime}\mathbf{X_i}] - \sum_{i = 1}^n E \bigg[ \text{log}\bigg( 1 + exp\bigg( \sum_{j = 1}^j \beta_j T_{ij} \theta_{ij} + \gamma \mathbf{X_i}\bigg)\bigg)\bigg] \nonumber
+\end{eqnarray}
+
+\begin{align}
+P_{m, i} & = &
+\begin{matrix} \sum_{j = 1}^{m - 1} \dbinom{m}{j} \dbinom{m - i - 1}{j - 1} p^i q^{m - j} \big( \frac{\eta_1}{\eta_1 + \eta_2}\big)^{j - 1} \big( \frac{\eta_2}{\eta_1 + \eta_2}\big)^{m - j}, 1 \leq i \leq m - 1, \nonumber
+\end{matrix}\\
+Q_{m, i} & = &
+\begin{matrix} \sum_{j = 1}^{m - 1} \dbinom{m}{j} \dbinom{m - i - 1}{j - 1} p^i q^{m - j} \big( \frac{\eta_2}{\eta_1 + \eta_2}\big)^{j - 1} \big( \frac{\eta_1}{\eta_1 + \eta_2}\big)^{m - j}, 1 \leq i \leq m - 1 \nonumber
+\end{matrix}
+\end{align}\bigskip
+
+\subsection{數學式挑戰(\uppercase\expandafter{\romannumeral3})}
+$$
+\Lambda(t) = exp \bigg(\int_{0}^{t} \xi(\mu)\cdot dW(t) - \frac{1}{2} \int_{0}^{t} \lVert \xi(\mu) \lVert ^2 du + (\lambda - \tilde{\lambda})t \bigg) \prod_{i = 1}^{N(t)} \frac{\tilde{\lambda}\tilde{f}(Y_i)}{\lambda f(Y_i)}.
+$$
+
+\begin{eqnarray}
+Caplet_{n+1}^{U \& I}(0) & = & B(0, T_{n+1})E^{pT_{n+1}}[\delta(L(T_n, T_n) - K)^{+}I_{\{M_{T_n}^{L}\geq U\}} + RI_{\{M_{T_n}^{L}\leq U\}}]\nonumber\\
+& = & B(0, T_{n+1})\bigg\{\underbrace{\delta E^{pT_{n+1}}[L(T_n, T_n)I_{\{L(T_n, T_n)\geq K,M_{T_n}^{L}\geq U\}}]}_{\text{(B.1)}}\nonumber\\
+& & -\delta K \underbrace{P^{T_n + 1}(L(T_n, T_n) \geq K, M_{T_n}^{L} \geq U)}_{\text{(B.2)}} + R \underbrace{P^{T_n + 1}(M_{T_n}^{L} \leq U)}_{\text{(B.3)}}\bigg\}\nonumber
+\end{eqnarray}
+\section{表格}
+這裡有許多的範例可以參考: \url{https://en.wikibooks.org/wiki/LaTeX/Tables}
+
+\subsection{簡單表格}
+以\verb|\begin{tabular} ... \end{tabular}| 製作表格，可用\\
+\verb|\begin{center} ... \end{center}| 置中。\\
+
+\begin{minipage}[c]{0.4\linewidth}
+\begin{tabular}{l|c|c}   
+\rowcolor{lightmauve}
+姓名   & 微積分 & 統計學 \\ 
+\hline
+王小明 & 97 & \textcolor{red}{57} \\ 
+張小華 & 95 & 99   
+\end{tabular}
+\end{minipage}
+\begin{minipage}[c]{0.6\linewidth}
+\begin{verbatim}
+\begin{tabular}{l|c|c}   
+\rowcolor{lightmauve}
+姓名   & 微積分 & 統計學 \\ 
+\hline
+王小明 & 97 & \textcolor{red}{57} \\  
+張小華 & 95 & 99 
+\end{tabular}
+\end{verbatim}
+\end{minipage}\bigskip
+\subsection{交替表格中顏色}
+\begin{center}
+\begin{tabular}{lcr}
+\hline
+        & \multicolumn{2}{c}{大陸經濟表現}\\\cline{2-3}
+期間    	& GDP(億元人民幣)   & 年增率 	\\\hline\rowcolor{classicrose}
+上半年 	& 532167   	      & 12.7\% 	\\\rowcolor{cream}
+第1季 	& 249310   	      & 18.3\%    \\\rowcolor{classicrose}
+第2季 	& 282857   	      & 7.9\% 	\\
+\hline
+\end{tabular}
+\end{center}
+\subsection{文字與表格}
+\begin{minipage}{.35\linewidth}
+\bigskip 
+大陸第2季國內生產總值(GDP)較去年同期增長7.9\%，略遜預期。上半年GDP增速為12.7\%，兩年平均增長5.3\%，距離疫情前6\%左右水準還有一些距離。
+\end{minipage}\hfill
+\begin{minipage}{.55\linewidth}
+\centering
+\begin{tabular}{lcr}
+\hline
+        & \multicolumn{2}{c}{大陸經濟表現}\\\cline{2-3}
+期間    	& GDP(億元人民幣)   & 年增率 	\\\hline\rowcolor{classicrose}
+上半年 	& 532167   	      & 12.7\% 	\\\rowcolor{cream}
+第1季 	& 249310   	      & 18.3\%    \\\rowcolor{classicrose}
+第2季 	& 282857   	      & 7.9\% 	\\
+\hline
+\end{tabular}
+\end{minipage}\bigskip
+
+\subsection{跨多行的列}
+\begin{center}
+\begin{tabular}{ |l|l|l| }
+\hline
+\multicolumn{3}{ |c| }{Team sheet} \\
+\hline
+Goalkeeper & GK & Paul Robinson \\ \hline
+\multirow{4}{*}{Defenders} & LB & Lucas Radebe \\
+ & DC & Michael Duburry \\
+ & DC & Dominic Matteo \\
+ & RB & Didier Domi \\ \hline
+\multirow{3}{*}{Midfielders} & MC & David Batty \\
+ & MC & Eirik Bakke \\
+ & MC & Jody Morris \\ \hline
+Forward & FW & Jamie McMaster \\ \hline
+\multirow{2}{*}{Strikers} & ST & Alan Smith \\
+ & ST & Mark Viduka \\
+\hline
+\end{tabular}
+\end{center}\bigskip
+\subsection{同時跨兩個方向}
+\begin{center}
+\begin{tabular}{cc|c|c|c|c|l}
+\cline{3-6}
+& & \multicolumn{4}{ c| }{Primes} \\ \cline{3-6}
+& & 2 & 3 & 5 & 7 \\ \cline{1-6}
+\multicolumn{1}{ |c  }{\multirow{2}{*}{Powers} } &
+\multicolumn{1}{ |c| }{504} & 3 & 2 & 0 & 1 &     \\ \cline{2-6}
+\multicolumn{1}{ |c  }{}                        &
+\multicolumn{1}{ |c| }{540} & 2 & 3 & 1 & 0 &     \\ \cline{1-6}
+\multicolumn{1}{ |c  }{\multirow{2}{*}{Powers} } &
+\multicolumn{1}{ |c| }{gcd} & 2 & 2 & 0 & 0 & min \\ \cline{2-6}
+\multicolumn{1}{ |c  }{}                        &
+\multicolumn{1}{ |c| }{lcm} & 3 & 3 & 1 & 1 & max \\ \cline{1-6}
+\end{tabular}
+\end{center}\bigskip
+\subsection{表格中文字換行}
+\begin{center}
+\begin{tabular}{ | l | l | l | p{5cm} |}
+\hline
+Day & Min Temp & Max Temp & Summary \\ \hline
+Monday & 11C & 22C & A clear day with lots of sunshine. However, the strong breeze will bring down the temperatures. \\ \hline
+Tuesday & 9C & 19C & Cloudy with rain, across many northern regions. Clear spells across most of Scotland and Northern Ireland, but rain reaching the far northwest. \\ \hline
+\end{tabular}
+\end{center}
+\subsection{滿意度表格}
+\begin{center}
+\begin{tabular}{>{
+\columncolor{grannysmithapple}}cccc}
+\rowcolor[gray]{.85}
+\hline
+午餐滿意度 & 好 & 普通 & 差 \\
+\hline
+菜色      & \mbox{\ooalign{$\checkmark$\cr\hidewidth$\square$\hidewidth\cr}} & $\qedsymbol$ & $\qedsymbol$ \\
+餐具清潔度 & $\qedsymbol$ & $\qedsymbol$ & \mbox{\ooalign{$\checkmark$\cr\hidewidth$\square$\hidewidth\cr}} \\
+用餐環境   & \mbox{\ooalign{$\checkmark$\cr\hidewidth$\square$\hidewidth\cr}} & $\qedsymbol$ & $\qedsymbol$ \\
+整體滿意度 & $\qedsymbol$ & \mbox{\ooalign{$\checkmark$\cr\hidewidth$\square$\hidewidth\cr}} & $\qedsymbol$ \\
+\hline 
+\end{tabular}
+\end{center}
+\subsection{長型表格}
+輸入 longtable 指令環境後，表格即將從該處開始排版。表格欄位的設定、行距、畫橫線等，都和 tabular指令環境相同。但因為表格超過一頁，因此每一頁都必須排版欄位標題。而使用 longtable 巨集套件後，原來的表格會自動拆為兩部分以上，分別排版於兩頁或是多頁之中，如表 \ref{tb:longtable} 所示。
+\begin{longtable}{@{}cccccc@{}}
+\caption{2330台積電個股股價行情表}
+\label{tb:longtable}\\
+\toprule
+日期 & 開盤價 & 最高價 & 最低價 & 收盤價 & 成交量 \\
+\midrule
+\endfirsthead
+\multicolumn{6}{l}{承接上頁}\\[2pt]
+\toprule
+日期 & 開盤價 & 最高價 & 最低價 & 收盤價 & 成交量 \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{續接下頁}
+\endfoot
+\endlastfoot
+110/10/08 & 582.00    & 583.00    & 573.00    & 575.00    & 18,781    \\
+110/10/07 & 575.00    & 582.00    & 572.00    & 580.00    & 28,252    \\
+110/10/06 & 573.00    & 574.00    & 565.00    & 571.00    & 33,887    \\
+110/10/05 & 562.00    & 572.00    & 560.00    & 572.00    & 35,198    \\
+110/10/04 & 574.00    & 575.00    & 569.00    & 572.00    & 22,045    \\
+\rowcolor{gray(x11gray)}
+110/10/03 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/10/02 & --~       & --~       & --~       & --~       & --~       \\
+110/10/01 & 579.00    & 579.00    & 571.00    & 574.00    & 38,817    \\
+110/09/30 & 580.00    & 585.00    & 575.00    & 580.00    & 30,388    \\
+110/09/29 & 580.00    & 583.00    & 577.00    & 580.00    & 51,758    \\
+110/09/28 & 595.00    & 596.00    & 592.00    & 594.00    & 16,923    \\
+110/09/27 & 600.00    & 602.00    & 593.00    & 602.00    & 19,680    \\
+\rowcolor{gray(x11gray)}
+110/09/26 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/09/25 & --~       & --~       & --~       & --~       & --~       \\
+110/09/24 & 591.00    & 598.00    & 590.00    & 598.00    & 16,993    \\
+110/09/23 & 588.00    & 593.00    & 588.00    & 588.00    & 22,236    \\
+110/09/22 & 586.00    & 589.00    & 583.00    & 586.00    & 40,528    \\
+\rowcolor{gray(x11gray)}
+110/09/21 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/09/20 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/09/19 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/09/18 & --~       & --~       & --~       & --~       & --~       \\
+110/09/17 & 600.00    & 610.00    & 599.00    & 600.00    & 40,998    \\
+110/09/16 & 603.00    & 607.00    & 599.00    & 600.00    & 23,166    \\
+110/09/15 & 610.00    & 613.00    & 607.00    & 607.00    & 23,798    \\
+110/09/14 & 618.00    & 618.00    & 612.00    & 613.00    & 14,658    \\
+110/09/13 & 619.00    & 620.00    & 613.00    & 615.00    & 15,659    \\
+\rowcolor{gray(x11gray)}
+110/09/12 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/09/11 & --~       & --~       & --~       & --~       & --~       \\
+110/09/10 & 615.00    & 623.00    & 614.00    & 622.00    & 16,662    \\
+110/09/09 & 612.00    & 620.00    & 610.00    & 619.00    & 19,128    \\
+110/09/08 & 622.00    & 627.00    & 612.00    & 619.00    & 38,713    \\
+110/09/07 & 634.00    & 634.00    & 623.00    & 623.00    & 26,352    \\
+110/09/06 & 623.00    & 638.00    & 621.00    & 631.00    & 58,426    \\
+110/09/03 & 610.00    & 620.00    & 610.00    & 620.00    & 53,915    \\
+110/09/02 & 613.00    & 615.00    & 607.00    & 607.00    & 24,849    \\
+110/09/01 & 614.00    & 614.00    & 608.00    & 613.00    & 31,062    \\
+110/08/31 & 604.00    & 614.00    & 598.00    & 614.00    & 54,534    \\
+110/08/30 & 602.00    & 605.00    & 599.00    & 605.00    & 38,191    \\
+\rowcolor{gray(x11gray)}
+110/08/29 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/08/28 & --~       & --~       & --~       & --~       & --~       \\
+110/08/27 & 596.00    & 600.00    & 593.00    & 599.00    & 28,150    \\
+110/08/26 & 601.00    & 603.00    & 591.00    & 594.00    & 44,846    \\
+110/08/25 & 579.00    & 585.00    & 574.00    & 585.00    & 28,008    \\
+110/08/24 & 574.00    & 575.00    & 571.00    & 572.00    & 25,189    \\
+110/08/23 & 560.00    & 572.00    & 559.00    & 566.00    & 34,146    \\
+\rowcolor{gray(x11gray)}
+110/08/22 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/08/21 & --~       & --~       & --~       & --~       & --~       \\
+110/08/20 & 560.00    & 563.00    & 551.00    & 552.00    & 47,300    \\
+110/08/19 & 573.00    & 573.00    & 559.00    & 559.00    & 42,133    \\
+110/08/18 & 568.00    & 575.00    & 566.00    & 574.00    & 45,953    \\
+110/08/17 & 580.00    & 582.00    & 578.00    & 580.00    & 31,705    \\
+110/08/16 & 582.00    & 586.00    & 578.00    & 584.00    & 19,579    \\
+\rowcolor{gray(x11gray)}
+110/08/15 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/08/14 & --~       & --~       & --~       & --~       & --~       \\
+110/08/13 & 585.00    & 585.00    & 579.00    & 581.00    & 23,285    \\
+110/08/12 & 586.00    & 588.00    & 584.00    & 586.00    & 15,644    \\
+110/08/11 & 590.00    & 590.00    & 585.00    & 590.00    & 20,262    \\
+110/08/10 & 596.00    & 596.00    & 589.00    & 591.00    & 17,379    \\
+110/08/09 & 590.00    & 595.00    & 583.00    & 595.00    & 17,611    \\
+\rowcolor{gray(x11gray)}
+110/08/08 & --~       & --~       & --~       & --~       & --~       \\
+\rowcolor{gray(x11gray)}
+110/08/07 & --~       & --~       & --~       & --~       & --~       \\
+110/08/06 & 596.00    & 596.00    & 588.00    & 591.00    & 13,894    \\
+110/08/05 & 598.00    & 598.00    & 593.00    & 596.00    & 15,507    \\
+110/08/04 & 598.00    & 598.00    & 594.00    & 596.00    & 20,818    \\
+110/08/03 & 594.00    & 594.00    & 590.00    & 594.00    & 23,185    \\
+110/08/02 & 583.00    & 590.00    & 580.00    & 590.00    & 23,825    \\
+\rowcolor{gray(x11gray)}
+110/08/01 & --~       & --~       & --~       & --~       & --~       \\
+
+\bottomrule
+\end{longtable}
+
+\subsection{旋轉表格}
+\begin{table}[H]
+\begin{center}
+\caption{Lebron James NBA 生涯數據}
+\extrarowheight=6pt
+\rotatebox[origin=c]{90}{
+\begin{tabular}{cccccccccccccccc}
+Season & Tm    & Pos   & G     & GS    & 3P\%  & 2P\%  & eFG\% & FT\%  & TRB   & AST   & STL   & BLK   & TOV   & PF    & PTS \\
+\hline
+2003-04 & CLE   & SG    & 79    & 79    & 0.290 & 0.438 & 0.438 & 0.754 & 5.5   & 5.9   & 1.6   & 0.7   & 3.5   & 1.9   & 20.9 \\
+2004-05 & CLE   & SF    & 80    & 80    & 0.351 & 0.499 & 0.504 & 0.750 & 7.4   & 7.2   & 2.2   & 0.7   & 3.3   & 1.8   & 27.2 \\
+2005-06 & CLE   & SF    & 79    & 79    & 0.335 & 0.518 & 0.515 & 0.738 & 7.0     & 6.6   & 1.6   & 0.8   & 3.3   & 2.3   & 31.4 \\
+2006-07 & CLE   & SF    & 78    & 78    & 0.319 & 0.513 & 0.507 & 0.698 & 6.7   & 6.0   & 1.6   & 0.7   & 3.2   & 2.2   & 27.3 \\
+2007-08 & CLE   & SF    & 75    & 74    & 0.315 & 0.531 & 0.518 & 0.712 & 7.9   & 7.2   & 1.8   & 1.1   & 3.4   & 2.2   & 30.0 \\
+2008-09 & CLE   & SF    & 81    & 81    & 0.344 & 0.535 & 0.53  & 0.780 & 7.6   & 7.2   & 1.7   & 1.1   & 3.0   & 1.7   & 28.4 \\
+2009-10 & CLE   & SF    & 76    & 76    & 0.333 & 0.560 & 0.545 & 0.767 & 7.3   & 8.6   & 1.6   & 1.0   & 3.4   & 1.6   & 29.7 \\
+2010-11 & MIA   & SF    & 79    & 79    & 0.330 & 0.552 & 0.541 & 0.759 & 7.5   & 7.0   & 1.6   & 0.6   & 3.6   & 2.1   & 26.7 \\
+2011-12 & MIA   & SF    & 62    & 62    & 0.362 & 0.556 & 0.554 & 0.771 & 7.9   & 6.2   & 1.9   & 0.8   & 3.4   & 1.5   & 27.1 \\
+2012-13 & MIA   & PF    & 76    & 76    & 0.406 & 0.602 & 0.603 & 0.753 & 8.0     & 7.3   & 1.7   & 0.9   & 3.0   & 1.4   & 26.8 \\
+2013-14 & MIA   & PF    & 77    & 77    & 0.379 & 0.622 & 0.610 & 0.750 & 6.9   & 6.3   & 1.6   & 0.3   & 3.5   & 1.6   & 27.1 \\
+2014-15 & CLE   & SF    & 69    & 69    & 0.354 & 0.536 & 0.535 & 0.710 & 6.0     & 7.4   & 1.6   & 0.7   & 3.9   & 2.0   & 25.3 \\
+2015-16 & CLE   & SF    & 76    & 76    & 0.309 & 0.573 & 0.551 & 0.731 & 7.4   & 6.8   & 1.4   & 0.6   & 3.3   & 1.9   & 25.3 \\
+2016-17 & CLE   & SF    & 74    & 74    & 0.363 & 0.611 & 0.594 & 0.674 & 8.6   & 8.7   & 1.2   & 0.6   & 4.1   & 1.8   & 26.4 \\
+2017-18 & CLE   & PF    & 82    & 82    & 0.367 & 0.603 & 0.590 & 0.731 & 8.6   & 9.1   & 1.4   & 0.9   & 4.2   & 1.7   & 27.5 \\
+2018-19 & LAL   & SF    & 55    & 55    & 0.339 & 0.582 & 0.560 & 0.665 & 8.5   & 8.3   & 1.3   & 0.6   & 3.6   & 1.7   & 27.4 \\
+2019-20 & LAL   & PG    & 67    & 67    & 0.348 & 0.564 & 0.550 & 0.693 & 7.8   & 10.2  & 1.2   & 0.5   & 3.9   & 1.8   & 25.3 \\
+2020-21 & LAL   & PG    & 45    & 45    & 0.365 & 0.591 & 0.576 & 0.698 & 7.7   & 7.8   & 1.1   & 0.6   & 3.7   & 1.6   & 25.0 \\
+\hline
+Career  & --~   & --~   & 1310  & 1309  & 0.345 & 0.550 & 0.543 & 0.733 & 7.4   & 7.4   & 1.6   & 0.7   & 3.5   & 1.8   & 27.0 \\
+\end{tabular}}
+\end{center}
+\end{table}\bigskip \bigskip
+\section{圖形}
+\subsection{點陣圖形}
+點陣圖形使用自然的方式來儲存數位資料，把圖形所佔的頁面想像成是許多很細小的方格子所組成，每一個小格子就代表了一個圖素(pixel)，圖素可能代表者各種不同的顏色，單位小格子愈多(解析度愈高)。平常常見的圖檔格式，例如: jpeg, gif, bmp, ico, xpm, png, psd, tiff $ \cdots\cdots $ 等等都是屬於點陣圖檔。\footnote{以上資訊參考 \url{https://www.cs.pu.edu.tw/~wckuo/doc/latex123/node10.html}} 圖 \ref{fig:python} 以png檔為例。
+\begin{figure}[h]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir python.png}
+    \caption{Python Logo}
+    \label{fig:python}
+\end{figure}
+
+\subsection{向量圖形}
+向量圖檔儲存的並不是實際各種圖素的資訊，而只是儲存數學運算的基本描述，顯像時再馬上計算出結果來顯示。目前最常見的向量圖檔，例如: eps, pdf, svg $ \cdots\cdots $ 等圖檔。圖 \ref{fig:normal} 以pdf檔為例。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale = 0.65]{normal.pdf}
+    \caption{Normal distribution}
+    \label{fig:normal}
+\end{figure}
+\subsection{多張圖形並列(共用標題)}
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.44]{\imgdir normal_pdf.jpg}
+\includegraphics[scale = 0.44]{\imgdir normal_cdf.jpg}
+\caption{Normal distribution}
+\end{figure}
+\subsection{多張圖形並列}
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[width = 7.8cm]{\imgdir normal_pdf.jpg}}
+\caption*{Normal distribution pdf}
+\end{minipage}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[width = 7.8cm]{\imgdir normal_cdf.jpg}}
+\caption*{Normal distribution cdf}
+\end{minipage}
+\end{figure}
+\subsection{文繞圖}
+\begin{wrapfigure}{R}{0.4\textwidth}
+\centering
+\includegraphics[width = 0.23\textwidth]{\imgdir R.jpg}
+\caption{文繞圖示範}\label{fig:R}
+\end{wrapfigure}
+
+R內建多種統計學及數字分析功能。R的功能也可以透過安裝套件（Packages，使用者撰寫的功能）增強。因為S的血緣，R比其他統計學或數學專用的程式語言有更強的物件導向（物件導向程式設計, S3, S4等）功能。雖然R主要用於統計分析或者開發統計相關的軟體，但也有人用作矩陣計算。其分析速度可媲美專用於矩陣計算的自由軟體GNU Octave和商業軟體MATLAB。\footnote{參考自 \url{https://en.wikipedia.org/wiki/R_(programming_language)}}
+\subsection{圖片側邊文字}
+\begin{SCfigure}[0.5][h]
+\caption{台積電2010年至2020年之股價趨勢}
+\includegraphics[width = 0.69\textwidth]{\imgdir 2330.png}
+\label{fig:2330}
+\end{SCfigure}
+\section{結語}
+此次作品透過  \LaTeX 編排呈現了文字變化(字體與顏色)、數學環境(方程式與矩陣)、表格、圖形等，撰寫的過程中深深感受到了 \LaTeX 與 Word在編排上的差異，也藉由撰寫此篇文章激發了自己對 \LaTeX 的興趣，相信此篇文章對自己未來編排論文上會有一定的幫助。
+%\end{document}

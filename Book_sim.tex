@@ -1,0 +1,451 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{模擬實驗：學習器的評比}}
+%\author{\small 陳柏維 \\ \small \it 國立臺北大學統計研究所}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{模擬實驗：學習器的評比}
+前三個文章介紹了幾種不同的學習器的學習與預測原理，也透過生成模擬資料評比了學習器，但卻沒有將全部的學習器一起做評比，因此本文將透過生成兩個群組及三個群組的模擬資料訓練評比線性判別式分析、二次判別式分析、 K-近鄰演算法以及類神經網路等六種學習器。
+
+\section{情境設計}
+在機器學習的領域，將不同的學習方法 (模型) 通稱為學習器，而學習器的選擇、訓練與評比是機器學習的重要步驟。下列將透過模擬雙變量常態母體的資料，探討學習器面對不同的資料時的表現，例如 : 資料的距離、資料的分散程度、資料相關性以及共變異數矩陣相不相同等資料型態。
+
+\section{資料生成}
+本節將透過上述情境設計生成兩群以及三群的資料，並以散佈圖呈現資料。
+\subsection{生成兩群不同的資料}
+
+\textbf{\large 模擬生成 1.(資料中心位置較遠、分散程度小且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+\newpage
+生成資料如圖 \ref{fig:final_1} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_1.eps}
+    \caption{模擬生成資料 1}
+    \label{fig:final_1}
+\end{figure}
+
+\textbf{\large 模擬生成 2.(資料中心位置較遠、分散程度大且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+生成資料如圖 \ref{fig:final_2} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_2.eps}
+    \caption{模擬生成資料 2}
+    \label{fig:final_2}
+\end{figure}
+
+\textbf{\large 模擬生成 3.(資料中心位置較近、分散程度小且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+生成資料如圖 \ref{fig:final_3} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_3.eps}
+    \caption{模擬生成資料 3}
+    \label{fig:final_3}
+\end{figure}
+
+\textbf{\large 模擬生成 4.(資料中心位置較近、分散程度大且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+生成資料如圖 \ref{fig:final_4} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_4.eps}
+    \caption{模擬生成資料 4}
+    \label{fig:final_4}
+\end{figure}
+
+\textbf{\large 模擬生成 5.(資料分散程度小、$X_1, X_2$ 具相關性且共變異矩陣相同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+生成資料如圖 \ref{fig:final_5} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_5.eps}
+    \caption{模擬生成資料 5}
+    \label{fig:final_5}
+\end{figure}
+
+\textbf{\large 模擬生成 6.(資料分散程度大、$X_1, X_2$ 具相關性且共變異矩陣不同)}
+
+假設資料來自兩個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+0 \\
+0
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+5 & 0.5\\
+0.5 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200\]
+
+生成資料如圖 \ref{fig:final_6} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.6]{\imgdir final_6.eps}
+    \caption{模擬生成資料 6}
+    \label{fig:final_6}
+\end{figure}
+
+\subsection{生成三群不同的資料}
+
+\textbf{\large 模擬生成 7.(資料分散程度小且共變異矩陣相同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+生成資料如圖 \ref{fig:final_7} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir final_7.eps}
+    \caption{模擬生成資料 7}
+    \label{fig:final_7}
+\end{figure}
+
+\textbf{\large 模擬生成 8.(資料分散程度大且共變異矩陣不同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0\\
+0 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+3 & 0\\
+0 & 3
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+5 & 0\\
+0 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+生成資料如圖 \ref{fig:final_8} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir final_8.eps}
+    \caption{模擬生成資料 8}
+    \label{fig:final_8}
+\end{figure}
+
+\textbf{\large 模擬生成 9.(資料分散程度小、$X_1, X_2$ 具相關性且共變異矩陣相同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+生成資料如圖 \ref{fig:final_9} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir final_9.eps}
+    \caption{模擬生成資料 9}
+    \label{fig:final_9}
+\end{figure}
+
+\textbf{\large 模擬生成 10.(資料分散程度大、$X_1, X_2$ 具相關性且共變異矩陣不同)}
+
+假設資料來自三個雙變量常態的母體，其平均數、共變異矩陣與樣本數分別為 ：
+
+\[\mu_1 = \begin{bmatrix}
+-1 \\
+-1
+\end{bmatrix}, \quad \mu_2 = \begin{bmatrix}
+1 \\
+1
+\end{bmatrix}, \quad \mu_3 = \begin{bmatrix}
+3 \\
+3
+\end{bmatrix}\]
+
+\[\begin{matrix} \sum_{1} \end{matrix} = \begin{bmatrix}
+1 & 0.5\\
+0.5 & 1
+\end{bmatrix}, \quad \begin{matrix} \sum_{2} \end{matrix} = \begin{bmatrix}
+3 & 0.5\\
+0.5 & 3
+\end{bmatrix}, \quad \begin{matrix} \sum_{3} \end{matrix} = \begin{bmatrix}
+5 & 0.5\\
+0.5 & 5
+\end{bmatrix}\]
+
+\[n_1 = 200, \quad n_2 = 200, \quad n_3 = 200\]
+
+生成資料如圖 \ref{fig:final_10} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.5]{\imgdir final_10.eps}
+    \caption{模擬生成資料 10}
+    \label{fig:final_10}
+\end{figure}
+
+\section{學習與測試}
+將模擬雙變量常態母體的資料分割成訓練樣本及測試樣本資料，其中訓練集與測試集的比例為 8 : 2，用以計算訓練誤差與測試誤差，接著採用 bootstrapping 的方式，重複抽樣 100 次，最後取平均做為比較的基準。
+
+\subsection{兩群不同資料在四種學習器訓練誤差與測試誤差之對比}
+表 \ref{tb:final_1} 為四種學習器訓練誤差之對比，表 \ref{tb:final_2} 為四種學習器測試誤差之對比。由表 \ref{tb:final_1} 可知，四種學習器在資料較為接近的情況下，訓練誤差皆會高於資料相距較遠的情況，而除了當資料中心位置遠、分散程度小且共變異矩陣相同的情況下 LDA 的訓練誤差最低之外，其餘的情況皆由 K = 5 的 K-近鄰演算法的訓練誤差為最低。而由表 \ref{tb:final_2} 可知，四種學習器除了當資料中心位置遠、分散程度小且共變異矩陣相同的情況下 LDA 的訓練誤差最低之外，其餘的情況皆由 隱藏層 = 20 的 類神經網路的訓練誤差為最低。
+
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{三群資料在四種學習器訓練誤差之對比}\label{tb:final_1}
+\tabcolsep=2pt
+\begin{tabular}{ccccccc} 
+\toprule
+& \multicolumn{6}{c}{學習器}\\
+\cmidrule(l){2-7}
+資料型態 & LDA & QDA & 5-NN & 15-NN & 10-ANN & 20-ANN\\[3pt]
+\midrule
+中心位置遠、分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0170 & 0.0173 & 0.0181 & 0.0189 & 0.0174 & 0.0175\\[3pt]
+中心位置遠、分散程度大且共變異矩陣不同 & 0.0938 & 0.0685 & \cellcolor{red!25}0.0584 & 0.0760 & 0.0650 & 0.0653\\[3pt]
+中心位置近、分散程度小且共變異矩陣相同 & 0.2372 & 0.2409 & \cellcolor{red!25}0.1731 & 0.2212 & 0.2336 & 0.2343\\[3pt]
+中心位置近、分散程度大且共變異矩陣不同 & 0.3263 & 0.2068 & \cellcolor{red!25}0.1726 & 0.2031 & 0.1998 & 0.1986\\[3pt]
+分散程度小、具相關性且共變異矩陣相同 & 0.2606 &  0.2550 & \cellcolor{red!25}0.2272 & 0.2596 & 0.2599 & 0.2599\\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.3533 &  0.2000 & \cellcolor{red!25}0.1726 & 0.1927 & 0.1893 & 0.1911\\ 
+\bottomrule
+\end{tabular}
+\end{table}
+三群資料在四種學習器訓練誤差之對比折線圖如圖 \ref{fig:final_11} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir final_11.eps}
+    \caption{三群資料在四種學習器訓練誤差之對比}
+    \label{fig:final_11}
+\end{figure}
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{兩群資料在四種學習器測試誤差之對比}\label{tb:final_2}
+\tabcolsep=2pt
+\begin{tabular}{ccccccc} 
+\toprule
+& \multicolumn{6}{c}{學習器}\\
+\cmidrule(l){2-7}
+資料型態 & LDA & QDA & 5-NN & 15-NN & 10-ANN & 20-ANN\\[3pt]
+\midrule
+中心位置遠、分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0144 & 0.0146 & 0.0147 & 0.0151 & 0.0154 & 0.0175\\[3pt]
+中心位置遠、分散程度大且共變異矩陣不同 & 0.0922 & 0.0664 & 0.0669 & 0.0750 & 0.0688 & \cellcolor{red!25}0.0653\\[3pt]
+中心位置近、分散程度小且共變異矩陣相同 & 0.2376 & 0.2410 & 0.2476 & 0.2711 & 0.2359 & \cellcolor{red!25}0.2343\\[3pt]
+中心位置近、分散程度大且共變異矩陣不同 & 0.3273 & 0.2137 & 0.2421 & 0.2391 & 0.2192 & \cellcolor{red!25}0.1986\\[3pt]
+分散程度小、具相關性且共變異矩陣相同 & 0.2684 &  0.2637 & 0.3242 & 0.2905 & 0.2700 & \cellcolor{red!25}0.2599\\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.3716 &  0.2046 & 0.2278 & 0.2041 & 0.2052 & \cellcolor{red!25}0.1911\\ 
+\bottomrule
+\end{tabular}
+\end{table}
+\newpage 
+兩群資料在四種學習器測試誤差之對比折線圖如圖 \ref{fig:final_12} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir final_12.eps}
+    \caption{兩群資料在四種學習器測試誤差之對比}
+    \label{fig:final_12}
+\end{figure}
+\subsection{三群不同資料在四種學習器訓練誤差與測試誤差之對比}
+表 \ref{tb:final_3} 為四種學習器訓練誤差之對比，表 \ref{tb:final_4} 為四種學習器測試誤差之對比。由表 \ref{tb:final_3} 可知，四種學習器在資料分散程度大的情況下，訓練誤差皆會高於資料分散程度小的情況，而除了當資料分散程度小且共變異矩陣相同的情況下 LDA 的訓練誤差最低之外，其餘的情況皆由 K = 5 的 K-近鄰演算法的訓練誤差為最低。而由表 \ref{tb:final_4} 可知，四種學習器在資料共變異矩陣相同的情況下皆由 LDA 的測試誤差最低，而在資料共變異矩陣不同的情況下皆由 隱藏層 = 20 的類神經網路的測試誤差最低。
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{三群資料在四種學習器訓練誤差之對比}\label{tb:final_3}
+\tabcolsep=2pt
+\begin{tabular}{ccccccc} 
+\toprule
+& \multicolumn{6}{c}{學習器}\\
+\cmidrule(l){2-7}
+資料型態 & LDA & QDA & 5-NN & 15-NN & 10-ANN & 20-ANN\\[3pt]
+\midrule
+資料分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0908 & 0.0978  & 0.0983 & 0.1009 & 0.0989 & 0.0992\\[3pt]
+資料分散程度大且共變異矩陣不同 & 0.2480 & 0.2348 & \cellcolor{red!25}0.2013 & 0.2205 & 0.2268 & 0.2250\\[3pt]
+分散程度小、具相關性且共變異矩陣相同 & 0.1579 &  0.1583 & \cellcolor{red!25}0.1467 & 0.1589  & 0.1594 & 0.1596\\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.2794 &  0.2548 & \cellcolor{red!25}0.2067 & 0.2440 & 0.2539 & 0.2529\\ 
+\bottomrule
+\end{tabular}
+\end{table}
+\newpage
+三群資料在四種學習器訓練誤差之對比折線圖如圖 \ref{fig:final_13} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir final_13.eps}
+    \caption{三群資料在四種學習器訓練誤差之對比}
+    \label{fig:final_13}
+\end{figure}
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{三群資料在四種學習器測試誤差之對比}\label{tb:final_4}
+\tabcolsep=2pt
+\begin{tabular}{ccccccc} 
+\toprule
+& \multicolumn{6}{c}{學習器}\\
+\cmidrule(l){2-7}
+資料型態 & LDA & QDA & 5-NN & 15-NN & 10-ANN & 20-ANN\\[3pt]
+\midrule
+資料分散程度小且共變異矩陣相同 & \cellcolor{red!25}0.0942 & 0.0948  & 0.1135 & 0.1048 & 0.0973 & 0.0992\\[3pt]
+資料分散程度大且共變異矩陣不同 & 0.2427 & 0.2527 & 0.2746 & 0.2464 & 0.2429 & \cellcolor{red!25}0.2250\\ [3pt]
+分散程度小、具相關性且共變異矩陣相同 & \cellcolor{red!25}0.1582 & 0.1594 & 0.1965 & 0.1739 & 0.1623 & 0.1596\\ [3pt]
+分散程度大、具相關性且共變異矩陣不同 & 0.2923 & 0.2664 & 0.2943 & 0.2782 & 0.2714 & \cellcolor{red!25}0.2529\\
+\bottomrule
+\end{tabular}
+\end{table} 
+\newpage
+三群資料在四種學習器測試誤差之對比折線圖如圖 \ref{fig:final_14} 所示。
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.8]{\imgdir final_14.eps}
+    \caption{三群資料在四種學習器測試誤差之對比}
+    \label{fig:final_14}
+\end{figure}
+\section{結語}
+本次作品透過生成兩個群組及三個群組的雙變量常態母體模擬資料訓練評比線性判別式分析、二次判別式分析、 K-近鄰演算法以及類神經網路等六種學習器。
+%\end{document}

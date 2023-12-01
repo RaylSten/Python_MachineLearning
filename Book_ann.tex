@@ -1,0 +1,534 @@
+%\input{../preamble_math}   
+%\title{\shadowbox{淺層機器學習:類神經網路學習器之探討}}
+%\author{\small 陳柏維 \\ \small \it 國立臺北大學統計研究所}
+%\date{\small \today}
+%\begin{document}
+%\maketitle
+%\fontsize{12}{20pt}\selectfont
+%\setlength{\parindent}{0pt}
+
+\chapter{淺層機器學習:類神經網路學習器之探討}
+本文將介紹類神經網路學習器的學習與預測原理，並透過 Python 對前端機器手臂與圖形辨識資料進行實作，觀察在不同隱藏層神經元下，隱藏層神經元個數對訓練結果的影響。
+
+\section{背景介紹}
+\subsection{前饋式(Feedforward)類神經網路的原理}
+
+圖 \ref{fig:ann_1} 展示具備一個隱藏層的典型前饋式類神經網路 \footnote{本圖取材自汪群超(2021), 《Neural Network : Regression and Classification》}，其中幾個須留意的數字為左邊輸入端(Input)標示為 $p$ 個變數個數(圖中 $p = 14$)，中間隱藏層(Hidden Layer)有 $q$ 個神經元(圖中 $q = 10$)及最右邊的輸出層(Output Layer)，共有 $r$ 個輸出變數(圖中 $r = 3$)。輸入與輸出變數的個數 $p, r$ 依問題的結構而定，譬如下一節的機器手臂的範例中 $p = 2$ 代表平面座標位置，而 $r = 2$ 代表機器手臂的兩個角度。值得一提的是中間的隱藏層與輸出層，特別是隱藏層的結構與所含的神經元數量 $q$。$q$ 越大，代表輸出與輸入之間的關係越複雜，從數學關係的角度來說，便是彼此間的非線性程度越高。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir ann_1.jpg}
+    \caption{具備一個隱藏層的典型前饋式類神經網路}
+    \label{fig:ann_1}
+\end{figure}
+
+假設輸入端的 $p$ 個變數表示為 $x_1, x_2, \cdots, x_p$，輸出端的 $r$ 個變數表示為 $\hat{y}_1, \hat{y}_2, \cdots, \hat{y}_r$，則前饋式類神經網路的輸出與輸入間的數學關係寫成
+\begin{equation}\label{eq:ann_1}
+\hat{y}_k = \sum_{i = 1}^q w_{ki}^2 g\bigg(\sum_{j = 1}^p w_{ij}^1 x_j + b_i^1\bigg) + b_k^2, \quad 1 \leq k \leq r
+\end{equation}
+其中函數 $g(·)$ 可以選擇為($−1 \leq g(z) \leq 1$)
+\begin{equation}\label{eq:ann_2}
+g(z) = c_1 \frac{1 - e^{-c_2 z}}{1 + e^{-c_2 z}}
+\end{equation}
+函數 $g(z)$ 的長相便如圖 \ref{fig:ann_1} 的隱藏層所繪製的函數圖。函數 $g(z)$ 也可以用在輸出層，以增加複雜度，不過通常使用如圖 \ref{fig:ann_1} 的線性函數 $y = x$，也就是圖 \ref{fig:ann_1} 的輸出層所繪製直線方程式。式 (\ref{fig:ann_1}) 中的 $w_{ij}^1$ 與 $b_i^1$ 代表第一個隱藏層的第 $i$ 個神經元與第 $j$ 個輸入的權重係數(Weightings)與位階係數(Biases)。同樣地，$w_{ki}^2$ 與 $b_k^2$ 則是第二層(在此為輸出層)的第 $k$ 個神經元與前一隱藏層的第 $i$ 個輸出的權重係數與位階係數。
+
+類神經網路根據已知的輸入與輸出資料 $x_j(n)$ 與 $y_k(n)$，調整係數 $w_{ij}^1$, $w_{ki}^2$, $b_i^1$ 與 $b_k^2$，使得真實資料 $y_k(n)$ 與類神經網路輸出資料 $yˆk(n)$ 的誤差為最小。假設共有 $N$ 筆真實資料，則所謂類神經網路的訓練階段，寫成多變量函數的最小值問題，即
+
+\begin{equation}\label{eq:ann_3}
+\mathop{\min}\limits_{\Omega} e(\Omega)
+\end{equation}
+
+其中誤差函數
+\begin{eqnarray}
+e(\Omega) & = & \sum_{n = 1}^N \sum_{k = 1}^r (y_k(n) - \hat{y}_k(n))^2 \nonumber \\
+& = & \sum_{n = 1}^N \sum_{k = 1}^r \bigg(y_k(n) - \sum_{i = 1}^q w_{ki}^2 g\bigg(w_{ij}^1 x_j + b_i^1 \bigg) + b_k^2 \bigg)^2
+\end{eqnarray}
+其中參數 $\Omega = \{w_{ij}^1, w_{ki}^2, b_i^1, b_k^2\}_{i = 1, 2, \cdots, q;j = 1, 2, \cdots, p; k = 1, 2, \cdots, r}$，共 $pq + qr + q + r$ 個參數。若以圖 \ref{fig:ann_1} 的類神經網路架構$(p = 14, q = 10, r = 3)$為例，式 (\ref{eq:ann_3}) 的誤差函數 $e(\Omega)$ 的變數共 $183$ 個。因此類神經網路可視為一個非常複雜、非線性程度很
+高的函數，能將輸入($X$)與輸出($Y$)的關係配適的很完美。
+
+雖然引起各界競相追逐並應用在許多領域，但如式(\ref{eq:ann_3})的高維度(變數多)最小值的計算問題卻是瓶頸。當輸入變數($p$)越多，所選擇的隱藏層神經元數量($q$)也越多時，若要求訓練的很完($e(\Omega)$越小)，不可避免地需要更大的計算量，而造成計算時間過長，讓研發人員望之卻步。諸如此類的困擾隨著電腦軟硬體的提升，與演算法的成熟，已逐漸將類神經網路的學習優勢拉到「量產」的程度了，帶起新一波的人工智慧風潮，譬如機器學習中的「深度學習」便是充分利用了類神經網路的配適(fitting)能力。
+
+另一個阻礙機器學習進程的因素是實用性。固然類神經網路能將輸入與輸出透過其高度的非線性函數配適到完美的境地，但對訓練外的輸入測試資料，其輸出表現並不如預期，中間還牽涉到隱藏層數、隱藏層的神經元數量及訓練程度都非常有關係。於是過多的測試與過長的測試時間，終於讓類神經網路的實用價值受到質疑。下一節的機器人手臂的範例也會展示不同的訓練過程將導致不同的測試結果。
+
+\section{機器人手臂}
+\subsection{解「逆運動方程式」(Inverse Kinematic Equations)}
+
+圖 \ref{fig:ann_2} 是一個低階自由度(DOF, Degree of Freedom)的機械手臂 \footnote{本圖取材自汪群超(2021), 《Neural Network : Regression and Classification》}，有兩截手臂，長度分別為 $l_1 = 20, l_2 = 10$。兩截手臂依據兩個角度 $\theta_1, \theta_2$ 的改變，可以使手臂最前端的位置 $(x, y)$ 覆蓋如圖 \ref{fig:ann_3} 第一象限的陰影區域，也就是手臂前端的指頭或鋏子可以碰觸到的地方。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir ann_2.jpg}
+    \caption{兩截式機械手臂}
+    \label{fig:ann_2}
+\end{figure}
+
+機械手臂藉由調整兩個角度 $\theta_1, \theta_2$ 讓前端的鋏子移動到目的地 $(x, y)$。也就是給定 $(x, y)$，必須計算出 $\theta_1, \theta_2$ 這兩個角度，這便是逆運動方程式的計算。因為維
+度低，角度少，因此這個逆運動方程式有解析解，如式 (\ref{eq:ann_6}) 的 $IKE$
+\begin{eqnarray}\label{eq:ann_5}
+FKE & : & \nonumber \\
+x   & = & l_1 \cos(\theta_1) + l_2 \cos(\theta_1 + \theta_2)\nonumber \\
+y   & = & l_1 \sin(\theta_1) + l_2 \sin(\theta_1 + \theta_2)
+\end{eqnarray}
+\begin{eqnarray}\label{eq:ann_6}
+IKE & : & \nonumber \\
+\theta_2  & = & l_1 \cos^{-1}\bigg(\frac{x^2 + y^2 - l_1^2 - l_2^2}{2l_1 l_2}\bigg) \nonumber \\
+\theta_1  & = & \tan^{-1}\bigg(\frac{y}{x}\bigg) - \tan^{-1}\bigg(\frac{l_2\sin(\theta_2)}{l_1 + l_2\cos(\theta_2)}\bigg)
+\end{eqnarray}
+當維度升高或機械手臂的角度變多之後，解析解變得不可能，必須尋求演算法的幫忙，找到近似解。在此，我們捨棄式 (\ref{eq:ann_6}) 的解析解不用，轉而藉由類神經網路的學習方式，在機器手臂能到達的範圍內找一些位置當作訓練資料（如圖 \ref{fig:ann_3} 的 + 字位置），讓類神經網路透過這些訓練資料找到輸出角度與輸入位置的關係，再來看看學習過後，當面對新的位置資料 $(x, y)$ 時，是否能準確輸出如式 (\ref{eq:ann_6}) 正確的角度 $(\theta_1, \theta_2)$?
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir ann_3.jpg}
+    \caption{兩截式機械手臂所及範圍與訓練資料分布點}
+    \label{fig:ann_3}
+\end{figure}
+
+下列將採兩層的前饋式架構(Two Layer Feed-Forward Neural Network)，根據前述機械手臂的設計，類神經網路的輸入是座標位置 $(x, y)$，輸出為機器手臂的兩個角度 $(\theta_1, \theta_2)$，架構如圖 \ref{fig:ann_4} \footnote{本圖取材自汪群超(2021), 《Neural Network : Regression and Classification》}，其中隱藏層先試探性地採用 $10$ 個神經元。接著可以嘗試提高隱藏層的數量，並觀察輸出的擬合值與真實值的差異，直到某個適合的數量為止。譬如圖 5 展示隱藏層 10, 20, 40 與 80 時的真實位置(+)與擬合位置(o)的差異，並計算出均方根誤差(Root Mean Squared Error, rmse) 值。從圖中可以看出當隱藏層數量增加時，均方根誤差隨之下降。不過，就類神經網路訓練而言，訓練資料所產生的誤差僅供參考，仍需參照測試資料的誤差而定。
+
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.9]{\imgdir ann_4.jpg}
+    \caption{兩層的前饋式類神經網路架構}
+    \label{fig:ann_4}
+\end{figure}
+
+\subsection{類神經網路訓練}
+下列將透過以上所講述之類神經網路預測原理進行訓練，其中訓練資料為自行生成的機器手臂位置與角度資料。
+
+\textbf{\large 訓練1. (演算法 : lbfgs)} 
+
+透過 Python 的 \verb|sklearn| 套件當中的 \verb|neural_network.MLPRegressor| 模組，其指令為 \verb|MLPRegressor|，其中 \verb|MLPRegressor| 代表 MultiLayer Perceptron Regressor。而 MultiLayer Perceptron 便是像圖 \ref{fig:ann_1} 的多層神經元(感知器 perceptrons)的架構，Regressor 代表其輸出/輸入的關係與同於迴歸模型的概念(輸出與輸入皆是連續型資料，非類別型)。
+
+首先準備測試資料，程式碼如下:
+\bigskip
+\begin{lstlisting}[language = Python]
+# Preaper training data (input)
+l1, l2 = 20, 10
+t = np.linspace(0, np.pi/2, 20) # 角度
+l = np.arange(l1 - l2 + 1, l1 + l2 + 1, 2) # 長度 
+X = l.reshape(-1, 1) @ np.cos(t.reshape(1, -1))
+Y = l.reshape(-1, 1) @ np.sin(t.reshape(1, -1))
+# prepare training data (output)
+theta2 = np.arccos((X.ravel()**2 + Y.ravel()**2 - \
+    l1**2 - l2**2)/(2*l1*l2))
+theta1 = np.arctan(Y.ravel()/X.ravel()) - \
+    np.arctan(l2*np.sin(theta2)/(l1+l2*np.cos(theta2)))
+\end{lstlisting}
+
+接著設定 \verb|MLPRegressor()| 訓練資料所需之前置作業，如隱藏層、演算法，程式碼如下:
+\bigskip
+\begin{lstlisting}[language = Python]
+# setup for ANN training
+InputX = np.c_[X.ravel(), Y.ravel()]
+OutputY = np.c_[theta1, theta2]
+hidden_layers = (10, )
+solver = 'lbfgs' 
+\end{lstlisting}
+
+最後透過 \verb|.fit()| 進行資料配適，程式碼如下:
+\bigskip
+\begin{lstlisting}[language = Python]
+mlp_reg = MLPRegressor(max_iter = 8000, solver = solver,
+    hidden_layer_sizes = hidden_layers, verbose = False,
+    activation = 'logistic', tol = 1e-6, random_state = None)
+mlp_reg.fit(InputX, OutputY)
+\end{lstlisting}
+
+圖 \ref{fig:ann_5} 為使用演算法 \verb|'lbfgs'| 訓練之結果，由圖 \ref{fig:ann_5} 可看出，隱藏層的神經元越多訓練的誤差越低。
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_5.jpg}}
+\caption*{}
+\end{minipage}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_6.jpg}}
+\caption*{}
+\end{minipage}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.45]{\imgdir ann_7.jpg}
+	\includegraphics[scale = 0.45]{\imgdir ann_8.jpg}
+	\caption{類神經網路訓練1. (演算法 : lbfgs)}
+	 \label{fig:ann_5}
+\end{figure}
+
+\textbf{\large 訓練2. (演算法 : sgd)} 
+
+與訓練1. 的訓練方式相同，差別在於演算法的不同，圖 \ref{fig:ann_6} 為使用演算法 \verb|'sgd'| 訓練之結果，由圖 \ref{fig:ann_6} 可看出，起初當隱藏層的神經元越多時，訓練的誤差越低，但神經元由 20 增加自 40 之後，訓練誤差突然暴增，甚至當神經元越多，誤差越高，而整體與訓練1. 相比誤差也都較高。
+\bigskip
+\begin{lstlisting}[language = Python]
+solver = 'sgd' 
+mlp_reg = MLPRegressor(max_iter = 8000, solver = solver,
+    hidden_layer_sizes = hidden_layers, verbose = False,
+    activation = 'logistic', tol = 1e-6, random_state = None)
+\end{lstlisting}
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_9.jpg}}
+\caption*{}
+\end{minipage}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_10.jpg}}
+\caption*{}
+\end{minipage}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.45]{\imgdir ann_11.jpg}
+	\includegraphics[scale = 0.45]{\imgdir ann_12.jpg}
+	\caption{類神經網路訓練2. (演算法 : sgd)}
+	 \label{fig:ann_6}
+\end{figure}
+
+\textbf{\large 訓練3. (演算法 : adam)} 
+
+與訓練1. 、訓練2. 的訓練方式相同，差別在於演算法的不同，圖 \ref{fig:ann_7} 為使用演算法 \verb|'adam'| 訓練之結果，由圖 \ref{fig:ann_7} 可看出，當隱藏層的神經元越多，訓練的誤差有越來越低的趨勢，整體而言比訓練2. 的誤差低，比訓練1. 的誤差高。
+\bigskip
+\begin{lstlisting}[language = Python]
+solver = 'adam' 
+mlp_reg = MLPRegressor(max_iter = 8000, solver = solver,
+    hidden_layer_sizes = hidden_layers, verbose = False,
+    activation = 'logistic', tol = 1e-6, random_state = None)
+\end{lstlisting}
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_13.jpg}}
+\caption*{}
+\end{minipage}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\centerline{\includegraphics[scale = 0.45]{\imgdir ann_14.jpg}}
+\caption*{}
+\end{minipage}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.45]{\imgdir ann_15.jpg}
+	\includegraphics[scale = 0.45]{\imgdir ann_16.jpg}
+	\caption{類神經網路訓練3. (演算法 : adam)}
+	 \label{fig:ann_7}
+\end{figure}
+
+將三個模擬訓練的訓練誤差整理成表 \ref{tb:ann_1}，由表 \ref{tb:ann_1} 可知，演算法 \verb|lbfgs| 不論在隱藏層神經元為 10、20、40、80，訓練誤差為三種演算法當中最低，故對於訓練 robot data 的效果最好。而演算法 \verb|lbfgs| 與 \verb|adam| 都有當隱藏層神經元越多時，訓練誤差越低的趨勢，而演算法 \verb|sgd| 則是起初當隱藏層的神經元越多時，訓練的誤差越低，但神經元由 20 增加自 40 之後，訓練誤差突然暴增，甚至當神經元越多，誤差越高。
+\bigskip
+\begin{table}[H] 
+\centering
+\caption{訓練誤差之對比}\label{tb:ann_1}
+\tabcolsep=12pt
+\begin{tabular}{cccc} 
+\toprule
+& \multicolumn{3}{c}{演算法}\\
+\cmidrule(l){2-4}
+隱藏層神經元 & lbfgs & sgd & adam\\[3pt]
+\midrule
+10 & \cellcolor{red!25}0.0495 & 0.1291 & 0.0809\\[3pt]
+20 & \cellcolor{red!25}0.0308 & 0.1210 & 0.0748\\[3pt]
+40 & \cellcolor{red!25}0.0234 & 0.6156 & 0.0731\\[3pt]
+80 & \cellcolor{red!25}0.0207 & 0.6511 & 0.0608\\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{訓練與測試資料的生成}
+圖 \ref{fig:ann_5} 的訓練資料並非最理想的選擇，譬如，在半徑比較小的內側，資料較為密集，也就是訓練資料的選擇不夠均勻，當資料量不足時，這個問題必須被正視。而其實在圓內或球體內，產生均勻亂數的方式已經很普遍那些落在圓內的亂數，其產生均勻亂數的方式參考的程式碼如下。
+\bigskip
+\begin{lstlisting}[language = Python]
+from scipy.special import gammainc
+def randsphere(center, radius, n_per_sphere):
+    r = radius
+    ndim = center.size
+    x = np.random.normal(size=(n_per_sphere, ndim))
+    ssq = np.sum(x ** 2, axis=1)
+    fr = r * gammainc(ndim / 2, ssq / 2) ** (1 / ndim)/np.sqrt(ssq)
+    frtiled = np.tile(fr.reshape(n_per_sphere, 1), (1, ndim))
+    p = center + np.multiply(x, frtiled)
+    return p
+\end{lstlisting}
+
+\subsection{類神經網路訓練與測試}
+在此小節將透過 Python 的 \verb|Neurolab| 套件進行類神經網路的訓練與測試，首先利用上一個小節所介紹的 \verb|randsphere| 生成資料，並將資料分別分割成訓練樣本及測試樣本，其中訓練集與測試集的比例為 7 : 3，訓練資料用來訓練類神經網路，接著以測試資料檢驗訓練結果。
+
+\textbf{\large 模擬訓練1. (樣本數 1000, 隱藏層神經元 10)}
+
+圖 \ref{fig:ann_8} 為設定樣本數 1000，一個隱藏層(含 10 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，但從將近 500 次 epochs 時逐漸平緩，最後在將近 3500 次 epochs 下降到 0.02。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [10, 2] # hidden layers + output layer
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_17.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_18.eps}
+	\caption{模擬訓練1. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_8}
+\end{figure}
+
+\textbf{\large 模擬訓練2. (樣本數 1000, 隱藏層神經元 20)}
+
+圖 \ref{fig:ann_9} 為設定樣本數 1000，一個隱藏層(含 20 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 700 次 epochs 下降到 0.01。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [20, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_19.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_20.eps}
+	\caption{模擬訓練2. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_9}
+\end{figure}
+
+\textbf{\large 模擬訓練3. (樣本數 1000, 隱藏層神經元 40)}
+
+圖 \ref{fig:ann_10} 為設定樣本數 1000，一個隱藏層(含 40 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 140 次 epochs 下降到 0.01。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [40, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_21.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_22.eps}
+	\caption{模擬訓練3. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_10}
+\end{figure}
+
+\textbf{\large 模擬訓練4. (樣本數 1000, 隱藏層神經元 80)}
+
+圖 \ref{fig:ann_11} 為設定樣本數 1000，一個隱藏層(含 80 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 80 次 epochs 下降到 0.01。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [80, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_23.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_24.eps}
+	\caption{模擬訓練4. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_11}
+\end{figure}
+
+\textbf{\large 模擬訓練5. (樣本數 2000, 隱藏層神經元 10)}
+
+圖 \ref{fig:ann_12} 為設定樣本數 2000，一個隱藏層(含 10 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 1750 次 epochs 下降到 0.09。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [10, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_25.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_26.eps}
+	\caption{模擬訓練5. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_12}
+\end{figure}
+
+\textbf{\large 模擬訓練6. (樣本數 2000, 隱藏層神經元 20)}
+
+圖 \ref{fig:ann_13} 為設定樣本數 2000，一個隱藏層(含 20 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 4000 次 epochs 下降到 0.03。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [20, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_27.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_28.eps}
+	\caption{模擬訓練6. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_13}
+\end{figure}
+
+\textbf{\large 模擬訓練7. (樣本數 2000, 隱藏層神經元 40)}
+
+圖 \ref{fig:ann_14} 為設定樣本數 2000，一個隱藏層(含 40 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 800 次 epochs 下降到 0.01。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [40, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_29.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_30.eps}
+	\caption{模擬訓練7. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_14}
+\end{figure}
+
+\textbf{\large 模擬訓練8. (樣本數 2000, 隱藏層神經元 80)}
+
+圖 \ref{fig:ann_15} 為設定樣本數 2000，一個隱藏層(含 80 個神經元)之預測結果，左邊為測試資料之預測結果，右邊為透過折線圖呈現訓練過程中 SSE 值的變化，可發現在訓練過程中，SSE 有逐漸下降的趨勢，在將近 800 次 epochs 下降到 0.01。
+\bigskip
+\begin{lstlisting}[language = Python]
+hidden_output_layers = [80, 2] 
+\end{lstlisting}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.49]{\imgdir ann_31.eps}
+	\includegraphics[scale = 0.49]{\imgdir ann_32.eps}
+	\caption{模擬訓練8. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_15}
+\end{figure}
+\newpage
+由表 \ref{tb:ann_2} 可知，設定樣本數為 1000 時，不論設定一個隱藏層神經元為多少，其訓練誤差皆低於樣本數 2000。而樣本數 1000、隱藏層神經元為 80 時，訓練誤差為最低。接著由表 \ref{tb:ann_3} 可知，設定樣本數為 1000 時，一個隱藏層神經元為 20 及 40 時，其測試誤差皆低於樣本數為 2000，而設定樣本數為 2000 時，一個隱藏層神經元為 10 及 80 時，其測試誤差皆低於樣本數為 1000。其中比較特別的是在訓練時，設定樣本數 1000、隱藏層神經元為 80 時，誤差為最低，但在測試時，其誤差為最高，我想可能是產生 overfitting 的問題進而導致。
+
+\begin{table}[H] 
+\centering
+\caption{訓練誤差之對比}\label{tb:ann_2}
+\tabcolsep=12pt
+\begin{tabular}{ccc} 
+\toprule
+& \multicolumn{2}{c}{樣本數}\\
+\cmidrule(l){2-3}
+隱藏層神經元 & 1000 & 2000 \\[3pt]
+\midrule
+10 & \cellcolor{red!25}0.027540 & 0.089380 \\[3pt]
+20 & \cellcolor{red!25}0.009878 & 0.025270 \\[3pt]
+40 & \cellcolor{red!25}0.009932 & 0.009995 \\[3pt]
+80 & \cellcolor{red!25}0.009885 & 0.009968 \\
+\bottomrule
+\end{tabular}
+\end{table}\bigskip
+\begin{table}[H] 
+\centering
+\caption{測試誤差之對比}\label{tb:ann_3}
+\tabcolsep=12pt
+\begin{tabular}{ccc} 
+\toprule
+& \multicolumn{2}{c}{樣本數}\\
+\cmidrule(l){2-3}
+隱藏層神經元 & 1000 & 2000 \\[3pt]
+\midrule
+10 & 0.065315 & \cellcolor{red!25}0.054668 \\[3pt]
+20 & \cellcolor{red!25}0.015406 & 0.047549 \\[3pt]
+40 & \cellcolor{red!25}0.006270 & 0.011886 \\[3pt]
+80 & 0.128489 & \cellcolor{red!25}0.041191 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{圖形辨識}
+類神經網路也普遍被應用在圖形識別上(Pattern Recognition)，一般被歸類為「群組判別」，可以是監督式或非監督式。圖形識別指的是簡單線條或單純影像的判別，譬如，圖 \ref{fig:ann_16} 從 0 到 9 的幾個手寫數字。早期應用在郵務系統分辨信件、包裹上的郵遞區號。由於手寫方式各異，每個相同數字的樣子也各異其趣，造成電腦自動判別時易產生困擾。而類神經網路的學習能力提供極有效率的解方，不妨親自來試試這個簡單的問題。
+
+在進入神經網路的辨識訓練前，先岔題到影像資料的安排與呈現。在此我們準備了如圖 \ref{fig:ann_16} 的手寫數字，9每個數字 1000 張，每張大小為 28 × 28 的黑白影像，作為類神經網路訓練用的資料。在進行訓練前，一定要先看看資料的長相，才能對接下來的神經網路訓練的難度有初步的看法。下列程式碼做出了圖 \ref{fig:ann_16}。
+\bigskip
+\begin{lstlisting}[language = Python]
+from scipy.io import loadmat # 讀取 matlab 檔案
+
+data_dir = 'data/'
+D = loadmat(data_dir + 'Digits_train.mat')
+X = D['X'] # images 影像資料 (矩陣 1000 x 784)
+y = D['y'] # labels: single output in 0~9
+n, m = 20, 30 # A n x m montage (total mn images)
+sz = np.sqrt(X.shape[1]).astype('int') # image size sz x sz
+M = np.zeros((m*sz, n*sz)) # montage image
+A = X[:m*n,:] # show the first nm images
+
+for i in range(m) :
+    for j in range(n) :
+        M[i*sz: (i+1)*sz, j*sz:(j+1)*sz] = \
+            A[i*n+j,:].reshape(sz, sz)
+
+plt.imshow(M.T, cmap = plt.cm.gray_r, interpolation = \
+					'nearest')
+\end{lstlisting}
+\begin{figure}[H]
+    \centering
+        \includegraphics[scale=0.7]{\imgdir ann_33.jpg}
+    \caption{手寫數字}
+    \label{fig:ann_16}
+\end{figure}
+
+接著開始進行神經網路的設定與訓練。與前段機器手臂的應用不同的是，手寫辨識屬於群組判別(共 10 個群組)，其輸出為類別資料，因此採用 \verb|sklearn.neural_network| 的另一個模組 \verb|MLPClassifier|，這是作為分類器(Classifier)用途的多層次感知器(Multi-Layer Perceptron)。以下程式碼展示 \verb|MLPClassifier| 的使用方式：
+\bigskip
+\begin{lstlisting}[language = Python]
+from sklearn.neural_network import MLPClassifier
+
+hidden_layers = (10,)
+solver = 'adam' 
+clf = MLPClassifier(max_iter = 10000, solver = solver, \
+	hidden_layer_sizes = hidden_layers, verbose = True, \
+	activation = 'logistic', tol = 1e-6, random_state = 0)
+clf.fit(X_train, y_train)
+\end{lstlisting}
+
+\subsection{圖形辨識模擬訓練}
+
+在此小節將透過 Python 的 \verb|MLPClassifier| 套件進行類神經網路的訓練與測試，首先將資料分別分割成訓練樣本及測試樣本，其中訓練集與測試集的比例為 7 : 3，訓練資料用來訓練類神經網路，接著以測試資料檢驗訓練結果。
+
+\textbf{\large 模擬訓練1. (隱藏層神經元 10)}
+
+圖 \ref{fig:ann_17} 為設定一個隱藏層(含 10 個神經元)之預測結果，左邊為透過混淆矩陣呈現一個隱藏層(10 個神經元)對測試資料的預測能力，其中以對「5」、「8」與「9」的判斷表現最差。右邊為透過折線圖呈現訓練訓練過程中，損失函數的變化，可發現在訓練過程中，損失函數有逐漸下降的趨勢，在將近 3500 次 Iteration 下降到 0.001。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.48]{\imgdir ann_35.eps}
+	\includegraphics[scale = 0.48]{\imgdir ann_34.eps}
+	\caption{模擬訓練1. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_17}
+\end{figure}
+
+\textbf{\large 模擬訓練2. (隱藏層神經元 20)}
+
+圖 \ref{fig:ann_18} 為設定一個隱藏層(含 20 個神經元)之預測結果，左邊為透過混淆矩陣呈現一個隱藏層(20 個神經元)對測試資料的預測能力，其中以對「3」與「5」的判斷表現最差。右邊為透過折線圖呈現訓練訓練過程中，損失函數的變化，可發現在訓練過程中，損失函數有逐漸下降的趨勢，在將近 2000 次 Iteration 下降到 0.001。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.48]{\imgdir ann_37.eps}
+	\includegraphics[scale = 0.48]{\imgdir ann_36.eps}
+	\caption{模擬訓練2. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_18}
+\end{figure}
+
+\textbf{\large 模擬訓練3. (隱藏層神經元 40)}
+
+圖 \ref{fig:ann_19} 為設定一個隱藏層(含 40 個神經元)之預測結果，左邊為透過混淆矩陣呈現一個隱藏層(40 個神經元)對測試資料的預測能力，其中以對「8」的判斷表現最差。右邊為透過折線圖呈現訓練訓練過程中，損失函數的變化，可發現在訓練過程中，損失函數有逐漸下降的趨勢，在將近 1750 次 Iteration 下降到 0.001。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.48]{\imgdir ann_39.eps}
+	\includegraphics[scale = 0.48]{\imgdir ann_38.eps}
+	\caption{模擬訓練3. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_19}
+\end{figure}
+
+\textbf{\large 模擬訓練4. (隱藏層神經元 80)}
+
+圖 \ref{fig:ann_20} 為設定一個隱藏層(含 80 個神經元)之預測結果，左邊為透過混淆矩陣呈現一個隱藏層(80 個神經元)對測試資料的預測能力，其中以對「5」的判斷表現最差。右邊為透過折線圖呈現訓練訓練過程中，損失函數的變化，可發現在訓練過程中，損失函數有逐漸下降的趨勢，在將近 1400 次 Iteration 下降到 0.001。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.48]{\imgdir ann_41.eps}
+	\includegraphics[scale = 0.48]{\imgdir ann_40.eps}
+	\caption{模擬訓練4. 預測結果與其訓練過程誤差}
+	 \label{fig:ann_20}
+\end{figure}
+
+由表 \ref{tb:ann_4} 可知，對於訓練誤差而言，當一個隱藏層神經元為 40 時，其訓練誤差為最低。而對於測試誤差而言，當一個隱藏層神經元為 80 時，其測試誤差為最低。
+
+\begin{table}[H] 
+\centering
+\caption{訓練誤差之對比}\label{tb:ann_4}
+\tabcolsep=12pt
+\begin{tabular}{ccc} 
+\toprule
+& \multicolumn{2}{c}{資料集}\\
+\cmidrule(l){2-3}
+隱藏層神經元 & 訓練資料 & 測試資料 \\[3pt]
+\midrule
+10 & 0.00117892 & 0.1933 \\[3pt]
+20 & 0.00101193 & 0.1500 \\[3pt]
+40 & \cellcolor{red!25}0.00090242 & 0.1433 \\[3pt]
+80 & 0.00092247 & \cellcolor{red!25}0.0833 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\section{結語}
+本次的作品介紹了類神經網路學習器，並且說明了學習器之理論、預測原理與實作，最後透過前端機器手臂與圖形辨識的模擬資料訓練探討隱藏層神經元個數對訓練結果的影響。
+%\end{document}
