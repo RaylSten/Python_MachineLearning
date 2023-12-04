@@ -1,8 +1,9 @@
 # Python_MachineLearning
-It is a LATEX demonstration by statistic and machine learning methods compare.
 
-Unzip the images.zip, first.
+This is a LaTeX demonstration comparing statistical and machine learning methods.
 
-The file Book_sim is to compare the machine learning methods about LDA, QDA, ANN, KNN, etc.
+First, unzip the images.zip file.
 
-All of the results are collected in Chen_main.pdf, which is a combination of all tex files.
+The file 'Book_sim' is used to compare machine learning methods such as LDA, QDA, ANN, KNN, etc.
+
+All the results are compiled in 'Chen_main.pdf', which is a combination of all the .tex files.
